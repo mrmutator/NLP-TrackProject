@@ -24,10 +24,10 @@ def build_vocabulary(corpus, min_length=0):
                 prefix_vocab.add(tok)
                 suffix_vocab.add(tok[::-1])
 
-
     return prefix_vocab, suffix_vocab
 
-def add_prefix_combinations(combinations, prefix_vocab, dawg_model, fugenlaute=[""]):
+def add_prefix_combinations(combinations, prefix_vocab, dawg_model, fugenlaute=[]):
+    fugenlaute += [""]
     for word in prefix_vocab:
         for prefix in dawg_model.prefixes(word)[:-1]: # last word is the word itself
             rest = word[len(prefix):]
@@ -36,13 +36,15 @@ def add_prefix_combinations(combinations, prefix_vocab, dawg_model, fugenlaute=[
                 if rest.startswith(fl):
                     if rest[len(fl):].title() in dawg_model:
                         combinations[prefix].add((fl, rest[len(fl):].title()))
+                        break
                     elif rest[len(fl):] in dawg_model:
                         combinations[prefix].add((fl, rest[len(fl):]))
+                        break
 
     return
 
 def add_suffix_combinations(combinations, suffix_vocab, lower_suffix_dawg_model, fugenlaute=[""]):
-    fugenlaute = [fl[::-1] for fl in fugenlaute]
+    fugenlaute = [fl[::-1] for fl in fugenlaute] + [""]
     for word in suffix_vocab:
         for suffix in lower_suffix_dawg_model.prefixes(word): # last word is the word itself
             rest = word[len(suffix):]
@@ -51,24 +53,32 @@ def add_suffix_combinations(combinations, suffix_vocab, lower_suffix_dawg_model,
                 if rest.startswith(fl):
                     if rest[len(fl):] in suffix_vocab:
                         combinations[rest[len(fl):][::-1]].add((fl[::-1], suffix[::-1]))
+                        break
 
     return
 
 corpus = CorpusReader("data/news.2011.true.de.gz", max_limit=100000)
 
+print "Building vocabulary ..."
 prefix_vocab, suffix_vocab = build_vocabulary(corpus, min_length=4)
+print "Building dawg models"
 dawg_model = dawg.DAWG(prefix_vocab)
 lower_suffix_dawg_model = dawg.DAWG(set(w.lower() for w in suffix_vocab))
 
-print len(prefix_vocab)
+print "Vocabulary size: ", len(prefix_vocab)
 
 
-fugenlaute = ["", "en", "s"] # make sure that empty string is always there
+fugenlaute = ["en", "es", "s"] # priority list.
 
 combinations = defaultdict(set)
+print "Prefix pass ..."
 add_prefix_combinations(combinations, prefix_vocab, dawg_model, fugenlaute=fugenlaute)
+print "Suffix pass ..."
 add_suffix_combinations(combinations, suffix_vocab, lower_suffix_dawg_model, fugenlaute=fugenlaute)
 
+print "Pickling model ..."
+
+pickle.dump(combinations, open("comb_model.p", "wb"))
 
 # some statistics
 for k, v in combinations.items()[:40]:
