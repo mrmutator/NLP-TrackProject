@@ -36,10 +36,10 @@ def add_prefix_combinations(combinations, prefix_vocab, dawg_model, fugenlaute=[
                 if rest.startswith(fl):
                     if rest[len(fl):].title() in dawg_model:
                         combinations[prefix].add((fl, rest[len(fl):].title()))
-                        break
+                        # break
                     elif rest[len(fl):] in dawg_model:
                         combinations[prefix].add((fl, rest[len(fl):]))
-                        break
+                        # break
 
     return
 
@@ -53,11 +53,11 @@ def add_suffix_combinations(combinations, suffix_vocab, lower_suffix_dawg_model,
                 if rest.startswith(fl):
                     if rest[len(fl):] in suffix_vocab:
                         combinations[rest[len(fl):][::-1]].add((fl[::-1], suffix[::-1]))
-                        break
+                        # break
 
     return
 
-corpus = CorpusReader("data/news.2011.true.de.gz", max_limit=100000)
+corpus = CorpusReader("data/news.2011.true.de.gz", max_limit=None)
 
 print "Building vocabulary ..."
 prefix_vocab, suffix_vocab = build_vocabulary(corpus, min_length=4)
