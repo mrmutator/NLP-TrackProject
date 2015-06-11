@@ -57,10 +57,10 @@ def add_suffix_combinations(combinations, suffix_vocab, lower_suffix_dawg_model,
 
     return
 
-corpus = CorpusReader("data/news.2011.true.de.gz", max_limit=None)
+corpus = CorpusReader("data/corpus.de.truecase.norm.gz", max_limit=None)
 
 print "Building vocabulary ..."
-prefix_vocab, suffix_vocab = build_vocabulary(corpus, min_length=4)
+prefix_vocab, suffix_vocab = build_vocabulary(corpus, min_length=5)
 print "Building dawg models"
 dawg_model = dawg.DAWG(prefix_vocab)
 lower_suffix_dawg_model = dawg.DAWG(set(w.lower() for w in suffix_vocab))
@@ -68,7 +68,7 @@ lower_suffix_dawg_model = dawg.DAWG(set(w.lower() for w in suffix_vocab))
 print "Vocabulary size: ", len(prefix_vocab)
 
 
-fugenlaute = ["en", "es", "s"] # priority list.
+fugenlaute = ["es", "s"] # priority list.
 
 combinations = defaultdict(set)
 print "Prefix pass ..."
