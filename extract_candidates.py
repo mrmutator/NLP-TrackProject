@@ -1,14 +1,15 @@
 __author__ = 'rwechsler'
 
 
-from corpus_reader import CorpusReader
+import gensim
 import dawg
 from collections import defaultdict
 import cPickle as pickle
 import numpy as np
 
 
-def build_vocabulary(corpus, min_length=0):
+
+def build_vocabulary(word2vec_model, min_length=0):
     """
     Build prefix and suffix vocabulary.
     :param corpus: CorpusReader object
@@ -18,8 +19,7 @@ def build_vocabulary(corpus, min_length=0):
 
     prefix_vocab = set()
     suffix_vocab = set()
-    for tokens in corpus:
-        for tok in tokens:
+    for tok in word2vec_model.vocab:
             if len(tok) >= min_length:
                 prefix_vocab.add(tok)
                 suffix_vocab.add(tok[::-1])
@@ -56,11 +56,11 @@ def add_suffix_combinations(combinations, suffix_vocab, lower_suffix_dawg_model,
                         # break
 
     return
+print "Loading word2ved model"
 
-corpus = CorpusReader("data/corpus.de.truecase.norm.gz", max_limit=None)
-
+word2vec_model = gensim.models.Word2Vec.load_word2vec_format("mono_500_de.bin", binary=True)
 print "Building vocabulary ..."
-prefix_vocab, suffix_vocab = build_vocabulary(corpus, min_length=5)
+prefix_vocab, suffix_vocab = build_vocabulary(word2vec_model, min_length=5)
 print "Building dawg models"
 dawg_model = dawg.DAWG(prefix_vocab)
 lower_suffix_dawg_model = dawg.DAWG(set(w.lower() for w in suffix_vocab))
