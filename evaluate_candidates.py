@@ -61,25 +61,26 @@ def evaluate_set(prefix, tails, word2vec_model, annoy_tree, rank_threshold=100):
 
 if __name__ == "__main__":
 
-    combinations = load_candidate_dump("models/comb_model.p")
+    print "candidates"
+    candidates = load_candidate_dump("models/comb_model.p")
+    print "loading word2vec model"
     word2vec_model = load_word2vecmodel("models/mono_500_de.model")
-    annoy_tree = build_annoy_tree(word2vec_model, output_file_name="test.ann")
-    #annoy_tree = load_annoy_tree("test.ann", word2vec_model)
+    print "building annoy tree"
+    annoy_tree = build_annoy_tree(word2vec_model, output_file_name="tree.ann")
+    # print "loading annoy tree"
+    # annoy_tree = load_annoy_tree("test.ann", word2vec_model)
 
     results = dict()
-    for k in combinations:
+    for k in candidates:
         # print k
         # print evaluate_set(k, combinations[k], word2vec_model, annoy_tree)
         # print "---"
 
         print k.encode("utf-8")
-        result = evaluate_set(k, combinations[k], word2vec_model, annoy_tree)
+        result = evaluate_set(k, candidates[k], word2vec_model, annoy_tree, rank_threshold=100)
         if result > 0:
             results[k] = result
 
     print "pickling"
-    pickle.dump(open("results.txt", "wb"))
-
-    for k in sorted(results, key=results.get, reverse=True):
-        print k, results[k]
+    pickle.dump(open("results.p", "wb"))
 
