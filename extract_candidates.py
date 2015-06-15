@@ -86,14 +86,20 @@ pickle.dump(combinations, open("comb_model.p", "wb"))
 
 # some statistics
 for k, v in combinations.items()[:40]:
-    print k, v
+    try:
+        print k.encode("utf-8"), v
+    except:
+        pass
 
 
 tuples = sorted([(k, len(v)) for k,v in combinations.items()], key= lambda tup: tup[1], reverse=True)
 print "------"
 print "Longest keys: "
 for k, v in tuples[:40]:
-    print k, v
+    try:
+        print k.encode("utf-8"), v
+    except:
+        pass
 
 keys, lengths = zip(*tuples)
 
