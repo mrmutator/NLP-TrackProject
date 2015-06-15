@@ -67,6 +67,10 @@ lower_suffix_dawg_model = dawg.DAWG(set(w.lower() for w in suffix_vocab))
 
 print "Vocabulary size: ", len(prefix_vocab)
 
+print "Saving dawg models"
+dawg_model.save("prefixes.dawg")
+lower_suffix_dawg_model.save("suffixes.dawg")
+
 
 fugenlaute = ["es", "s"] # priority list.
 
