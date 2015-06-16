@@ -29,12 +29,26 @@ def load_annoy_tree(model_file_name, word2vec_model):
     tree.load(model_file_name)
     return tree
 
+def annoy_knn(annoy_tree, vector, true_index, k=100):
+    neighbours = annoy_tree.get_nns_by_vector(list(vector), k)
+    if true_index in neighbours:
+        return True
+    else:
+        return False
+
+def word2vec_knn(word2vec_model, vector, true_word, k=100):
+    neighbours, _ = zip(*word2vec_model.most_similar([vector], topn=k))
+    if true_word in neighbours:
+        return True
+    else:
+        return False
 
 
 def evaluate_set(prefix, tails, word2vec_model, annoy_tree, rank_threshold=100):
     # similarities = []
-    positive_counts = 0
-    negative_counts = 0
+    counts = dict()
+    counts[True] = 0
+    counts[False] = 0
     for (fl1, tail1), (fl2, tail2) in itertools.permutations(tails, 2):
         try:
             diff = word2vec_model[prefix + fl2 + tail2] - word2vec_model[tail2]
@@ -43,32 +57,31 @@ def evaluate_set(prefix, tails, word2vec_model, annoy_tree, rank_threshold=100):
             # true_vector = word2vec_model[prefix + fl1 + tail1]
             # similarities.append(np.dot(gensim.matutils.unitvec(true_vector), gensim.matutils.unitvec(predicted)))
 
-            true_index = word2vec_model.vocab[prefix + fl1 + tail1].index
+            true_word = prefix + fl1 + tail1
+            true_index = word2vec_model.vocab[true_word].index
 
+            #result = annoy_knn(annoy_tree, predicted, true_index, rank_threshold)
+            result = word2vec_knn(word2vec_model, predicted, true_word, rank_threshold)
 
-            neighbours = annoy_tree.get_nns_by_vector(list(predicted), rank_threshold)
-
-            if true_index in neighbours:
-               positive_counts += 1
-            else:
-               negative_counts += 1
+            counts[result] += 1
 
         except KeyError:
             pass
 
-    return float(positive_counts) / (positive_counts + negative_counts) if positive_counts + negative_counts > 0 else 0
+    return float(counts[True]) / (counts[True] + counts[False]) if counts[True] + counts[False] > 0 else 0
 
 
 if __name__ == "__main__":
 
-    print "candidates"
+    print "loading candidates"
     candidates = load_candidate_dump("models/comb_model.p")
     print "loading word2vec model"
     word2vec_model = load_word2vecmodel("models/mono_500_de.model")
-    print "building annoy tree"
-    annoy_tree = build_annoy_tree(word2vec_model, output_file_name="tree.ann")
+    #print "building annoy tree"
+    #annoy_tree = build_annoy_tree(word2vec_model, output_file_name="tree.ann")
     # print "loading annoy tree"
     # annoy_tree = load_annoy_tree("test.ann", word2vec_model)
+    annoy_tree = None
 
     results = dict()
     for k in candidates:
@@ -77,10 +90,12 @@ if __name__ == "__main__":
         # print "---"
 
         print k.encode("utf-8")
+        print candidates[k]
         result = evaluate_set(k, candidates[k], word2vec_model, annoy_tree, rank_threshold=100)
+        print result
         if result > 0:
             results[k] = result
 
-    print "pickling"
-    pickle.dump(open("results.p", "wb"))
+    #print "pickling"
+    #pickle.dump(open("results.p", "wb"))
 
