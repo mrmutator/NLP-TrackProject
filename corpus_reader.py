@@ -1,4 +1,4 @@
-import gzip
+import codecs
 from nltk.tokenize import RegexpTokenizer
 import glob
 import sys
@@ -23,5 +23,8 @@ class CorpusReader():
         """
         for f in self.files:
             print "Processing ", f
-            for line in gzip.open(f, "rb"):
-                yield self.tokenizer.tokenize(line)
+            for line in open(f, "r"):
+		try:
+	                yield self.tokenizer.tokenize(line.decode("utf-8"))
+		except:
+			pass
