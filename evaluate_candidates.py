@@ -7,6 +7,12 @@ from annoy import AnnoyIndex
 import multiprocessing as mp
 import sys
 import argparse
+import time
+import datetime
+
+
+def timestamp():
+    return datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
 
 def load_candidate_dump(file_name):
     return pickle.load(open(file_name, "rb"))
@@ -137,30 +143,31 @@ if __name__ == "__main__":
 
     arguments = parser.parse_args(sys.argv[1:])
 
-    print "loading word2vec model"
+    print timestamp(), "loading word2vec model"
     word2vec_model = load_word2vecmodel(arguments.word2vec_file)
 
     if not arguments.annoy_tree_file:
 
-        print "building annoy tree"
+        print timestamp(), "building annoy tree"
         annoy_tree = build_annoy_tree(word2vec_model, n_trees=n_annoy_trees, output_file_name=arguments.output_tree_file)
 
     else:
-        print "loading annoy tree"
+        print timestamp(), "loading annoy tree"
         annoy_tree = load_annoy_tree(arguments.annoy_tree_file, word2vec_model)
 
     if arguments.candidates_file and arguments.result_output_file:
-        print "loading candidates"
+        print timestamp(), "loading candidates"
         candidates = load_candidate_dump(arguments.candidates_file)
 
+        print timestamp(), "Evaluating candidates"
         results = evaluate_candidates(candidates, annoy_tree, word2vec_model, rank_threshold=rank_threshold,
                                       sample_size=sample_set_size, processes=n_processes)
 
-        print "pickling"
+        print timestamp(), "pickling"
         pickle.dump(results, open(arguments.result_output_file, "wb"))
 
 
-    print "done"
+    print timestamp(), "done"
 
 
 
