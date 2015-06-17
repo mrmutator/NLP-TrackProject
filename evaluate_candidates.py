@@ -5,7 +5,8 @@ import itertools
 import random
 from annoy import AnnoyIndex
 import multiprocessing as mp
-
+import sys
+import argparse
 
 def load_candidate_dump(file_name):
     return pickle.load(open(file_name, "rb"))
@@ -117,17 +118,49 @@ def evaluate_candidates(candidates, annoy_tree, word2vec_model, rank_threshold=1
 
 if __name__ == "__main__":
 
-    print "loading candidates"
-    candidates = load_candidate_dump("models/small_candidates.p")
+    #### Parameters-------------------------------------------####
+    rank_threshold = 100
+    sample_set_size = 500
+    n_annoy_trees = 10
+    n_processes = 2
+    ####End-Parametes-----------------------------------------####
+
+
+    parser = argparse.ArgumentParser(description='Evaluate candidates')
+
+    parser.add_argument('-w', action="store", dest="word2vec_file", required=True)
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('-t', action="store", dest="annoy_tree_file")
+    group.add_argument('-b', action="store", dest="output_tree_file")
+    parser.add_argument('-c', action="store", dest="candidates_file")
+    parser.add_argument('-o', action="store", dest="result_output_file")
+
+    arguments = parser.parse_args(sys.argv[1:])
+
     print "loading word2vec model"
-    word2vec_model = load_word2vecmodel("models/mono_500_de.bin")
-    print "building annoy tree"
-    annoy_tree = build_annoy_tree(word2vec_model, n_trees=10, output_file_name="models/tree.ann")
-    print "loading annoy tree"
-    annoy_tree = load_annoy_tree("models/tree.ann", word2vec_model)
+    word2vec_model = load_word2vecmodel(arguments.word2vec_file)
 
-    results = evaluate_candidates(candidates, annoy_tree, word2vec_model, rank_threshold=100, sample_size=100, processes=2)
+    if not arguments.annoy_tree_file:
 
-    print "pickling"
-    pickle.dump(results, open("results.p", "wb"))
+        print "building annoy tree"
+        annoy_tree = build_annoy_tree(word2vec_model, n_trees=n_annoy_trees, output_file_name=arguments.output_tree_file)
+
+    else:
+        print "loading annoy tree"
+        annoy_tree = load_annoy_tree(arguments.annoy_tree_file, word2vec_model)
+
+    if arguments.candidates_file and arguments.result_output_file:
+        print "loading candidates"
+        candidates = load_candidate_dump(arguments.candidates_file)
+
+        results = evaluate_candidates(candidates, annoy_tree, word2vec_model, rank_threshold=rank_threshold,
+                                      sample_size=sample_set_size, processes=n_processes)
+
+        print "pickling"
+        pickle.dump(results, open(arguments.result_output_file, "wb"))
+
+
+    print "done"
+
+
 
