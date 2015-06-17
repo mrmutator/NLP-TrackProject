@@ -67,6 +67,28 @@ def evaluate_set(prefix, tails, word2vec_model, annoy_tree, rank_threshold=100, 
 
     return float(counts[True]) / (counts[True] + counts[False]) if counts[True] + counts[False] > 0 else 0
 
+def test_pair(pair1, pair2, word2vec_model, k=100, show=30):
+    prefix = pair1[0]
+    fl1 = pair1[1]
+    tail1 = pair1[2]
+    prefix2 = pair2[0]
+    fl2 = pair2[1]
+    tail2 = pair2[2]
+    assert prefix == prefix2
+
+    diff = word2vec_model[prefix + fl2 + tail2] - word2vec_model[tail2]
+    predicted = word2vec_model[tail1] + diff
+    # cosine similarity
+    # true_vector = word2vec_model[prefix + fl1 + tail1]
+    # similarities.append(np.dot(gensim.matutils.unitvec(true_vector), gensim.matutils.unitvec(predicted)))
+
+    true_word = prefix + fl1 + tail1
+
+    neighbours = word2vec_model.most_similar([predicted], topn=k)
+
+    print neighbours[:show]
+    print "Found: ", true_word in neighbours
+
 
 if __name__ == "__main__":
 
