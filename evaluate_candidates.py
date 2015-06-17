@@ -140,6 +140,7 @@ if __name__ == "__main__":
     group.add_argument('-b', action="store", dest="output_tree_file")
     parser.add_argument('-c', action="store", dest="candidates_file")
     parser.add_argument('-o', action="store", dest="result_output_file")
+    parser.add_argument('-p', action="store", dest="n_processes", type=int, default=n_processes)
 
     arguments = parser.parse_args(sys.argv[1:])
 
