@@ -95,22 +95,22 @@ if __name__ == "__main__":
     print "loading candidates"
     candidates = load_candidate_dump("models/comb_model.p")
     print "loading word2vec model"
-    word2vec_model = load_word2vecmodel("models/mono_500_de.model")
+    word2vec_model = load_word2vecmodel("models/mono_500_de.bin")
     # print "building annoy tree"
     # annoy_tree = build_annoy_tree(word2vec_model, output_file_name="tree.ann")
     print "loading annoy tree"
-    annoy_tree = load_annoy_tree("tree.ann", word2vec_model)
+    annoy_tree = load_annoy_tree("models/tree.ann", word2vec_model)
 
     results = dict()
     for k in candidates:
 
         print k.encode("utf-8")
-        print candidates[k]
+        # print candidates[k]
         result = evaluate_set(k, candidates[k], word2vec_model, annoy_tree, rank_threshold=100, sample_size=500)
         print result
         if result > 0:
             results[k] = result
 
     print "pickling"
-    pickle.dump(open("results.p", "wb"))
+    pickle.dump(results, open("results.p", "wb"))
 
