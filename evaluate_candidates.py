@@ -109,12 +109,15 @@ def candidate_generator(candidates, annoy_tree, word2vec_model, rank_threshold, 
     for prefix in candidates:
         yield (prefix, candidates[prefix], word2vec_model, annoy_tree, rank_threshold, sample_size)
 
+def mp_wrapper_evaluate_set(argument):
+    return evaluate_set(*argument)
+
 
 def evaluate_candidates(candidates, annoy_tree, word2vec_model, rank_threshold=100, sample_size=500, processes=4):
     pool = mp.Pool(processes=processes)
 
     arguments = candidate_generator(candidates, annoy_tree, word2vec_model, rank_threshold, sample_size)
-    results = pool.map(evaluate_set, arguments)
+    results = pool.map(mp_wrapper_evaluate_set, arguments)
 
     return zip(candidates.keys(), results)
 
