@@ -126,7 +126,7 @@ if __name__ == "__main__":
     sample_set_size = 500
     n_annoy_trees = 100
     n_processes = 2
-    ####End-Parametes-----------------------------------------####
+    ####End-Parametes-------------------------------------------------####
 
 
     parser = argparse.ArgumentParser(description='Evaluate candidates')
@@ -138,7 +138,7 @@ if __name__ == "__main__":
     parser.add_argument('-c', action="store", dest="candidates_file")
     parser.add_argument('-o', action="store", dest="result_output_file")
     parser.add_argument('-p', action="store", dest="n_processes", type=int, default=n_processes)
-    parser.add_argument('-n', action="store", dest="n_annoy_trees", default=n_annoy_trees)
+    parser.add_argument('-n', action="store", dest="n_annoy_trees", type=int, default=n_annoy_trees)
     parser.add_argument('-s', action="store", dest="sample_set_size", type=int, default=sample_set_size)
     parser.add_argument('-r', action="store", dest="rank_threshold", type=int, default=rank_threshold)
 
