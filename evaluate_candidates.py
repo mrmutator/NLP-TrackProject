@@ -95,9 +95,6 @@ def test_pair(pair1, pair2, word2vec_model, k=100, show=30):
 
     diff = word2vec_model[prefix + fl2 + tail2.lower()] - word2vec_model[tail2]
     predicted = word2vec_model[tail1] + diff
-    # cosine similarity
-    # true_vector = word2vec_model[prefix + fl1 + tail1]
-    # similarities.append(np.dot(gensim.matutils.unitvec(true_vector), gensim.matutils.unitvec(predicted)))
 
     true_word = prefix + fl1 + tail1.lower()
 
@@ -124,10 +121,10 @@ def evaluate_candidates(candidates, annoy_tree, word2vec_model, rank_threshold=1
 
 if __name__ == "__main__":
 
-    #### Parameters-------------------------------------------####
+    #### Default Parameters-------------------------------------------####
     rank_threshold = 100
     sample_set_size = 500
-    n_annoy_trees = 10
+    n_annoy_trees = 100
     n_processes = 2
     ####End-Parametes-----------------------------------------####
 
@@ -141,6 +138,9 @@ if __name__ == "__main__":
     parser.add_argument('-c', action="store", dest="candidates_file")
     parser.add_argument('-o', action="store", dest="result_output_file")
     parser.add_argument('-p', action="store", dest="n_processes", type=int, default=n_processes)
+    parser.add_argument('-n', action="store", dest="n_annoy_trees", default=n_annoy_trees)
+    parser.add_argument('-s', action="store", dest="sample_set_size", type=int, default=sample_set_size)
+    parser.add_argument('-r', action="store", dest="rank_threshold", type=int, default=rank_threshold)
 
     arguments = parser.parse_args(sys.argv[1:])
 
@@ -150,7 +150,7 @@ if __name__ == "__main__":
     if not arguments.annoy_tree_file:
 
         print timestamp(), "building annoy tree"
-        annoy_tree = build_annoy_tree(word2vec_model, n_trees=n_annoy_trees, output_file_name=arguments.output_tree_file)
+        annoy_tree = build_annoy_tree(word2vec_model, n_trees=arguments.n_annoy_trees, output_file_name=arguments.output_tree_file)
 
     else:
         print timestamp(), "loading annoy tree"
@@ -161,8 +161,8 @@ if __name__ == "__main__":
         candidates = load_candidate_dump(arguments.candidates_file)
 
         print timestamp(), "Evaluating candidates"
-        results = evaluate_candidates(candidates, annoy_tree, word2vec_model, rank_threshold=rank_threshold,
-                                      sample_size=sample_set_size, processes=n_processes)
+        results = evaluate_candidates(candidates, annoy_tree, word2vec_model, rank_threshold=arguments.rank_threshold,
+                                      sample_size=arguments.sample_set_size, processes=arguments.n_processes)
 
         print timestamp(), "pickling"
         pickle.dump(results, open(arguments.result_output_file, "wb"))
