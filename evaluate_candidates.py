@@ -4,6 +4,7 @@ import gensim
 import itertools
 import random
 from annoy import AnnoyIndex
+import multiprocessing as mp
 
 
 def load_candidate_dump(file_name):
@@ -12,12 +13,12 @@ def load_candidate_dump(file_name):
 def load_word2vecmodel(file_name):
     return gensim.models.Word2Vec.load_word2vec_format(file_name, binary=True)
 
-def build_annoy_tree(word2vec_model, output_file_name=None):
+def build_annoy_tree(word2vec_model, n_trees=100, output_file_name=None):
     tree = AnnoyIndex(word2vec_model.layer1_size)
     for i, word in enumerate(word2vec_model.index2word):
         tree.add_item(i, list(word2vec_model[word]))
 
-    tree.build(10) #  how many?
+    tree.build(n_trees) #
 
     if output_file_name:
         tree.save(output_file_name)
@@ -68,6 +69,15 @@ def evaluate_set(prefix, tails, word2vec_model, annoy_tree, rank_threshold=100, 
     return float(counts[True]) / (counts[True] + counts[False]) if counts[True] + counts[False] > 0 else 0
 
 def test_pair(pair1, pair2, word2vec_model, k=100, show=30):
+    """
+    Only used in interactive mode so far.
+    :param pair1:
+    :param pair2:
+    :param word2vec_model:
+    :param k:
+    :param show:
+    :return:
+    """
     prefix = pair1[0]
     fl1 = pair1[1]
     tail1 = pair1[2]
@@ -87,29 +97,36 @@ def test_pair(pair1, pair2, word2vec_model, k=100, show=30):
     neighbours = word2vec_model.most_similar([predicted], topn=k)
 
     print neighbours[:show]
+    neighbours, _ = zip(*neighbours)
     print "Found: ", true_word in neighbours
+
+
+def candidate_generator(candidates, annoy_tree, word2vec_model, rank_threshold, sample_size):
+    for prefix in candidates:
+        yield (prefix, candidates[prefix], word2vec_model, annoy_tree, rank_threshold, sample_size)
+
+
+def evaluate_candidates(candidates, annoy_tree, word2vec_model, rank_threshold=100, sample_size=500, processes=4):
+    pool = mp.Pool(processes=processes)
+
+    arguments = candidate_generator(candidates, annoy_tree, word2vec_model, rank_threshold, sample_size)
+    results = pool.map(evaluate_set, arguments)
+
+    return zip(candidates.keys(), results)
 
 
 if __name__ == "__main__":
 
     print "loading candidates"
-    candidates = load_candidate_dump("models/comb_model.p")
+    candidates = load_candidate_dump("models/small_candidates.p")
     print "loading word2vec model"
     word2vec_model = load_word2vecmodel("models/mono_500_de.bin")
-    # print "building annoy tree"
-    # annoy_tree = build_annoy_tree(word2vec_model, output_file_name="tree.ann")
+    print "building annoy tree"
+    annoy_tree = build_annoy_tree(word2vec_model, n_trees=10, output_file_name="models/tree.ann")
     print "loading annoy tree"
     annoy_tree = load_annoy_tree("models/tree.ann", word2vec_model)
 
-    results = dict()
-    for k in candidates:
-
-        print k.encode("utf-8")
-        # print candidates[k]
-        result = evaluate_set(k, candidates[k], word2vec_model, annoy_tree, rank_threshold=100, sample_size=500)
-        print result
-        if result > 0:
-            results[k] = result
+    results = evaluate_candidates(candidates, annoy_tree, word2vec_model, rank_threshold=100, sample_size=100, processes=2)
 
     print "pickling"
     pickle.dump(results, open("results.p", "wb"))
