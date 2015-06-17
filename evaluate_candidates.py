@@ -52,9 +52,9 @@ def evaluate_set(prefix, tails, word2vec_model, annoy_tree, rank_threshold=100, 
         tails = random.sample(tails, sample_size)
     for (fl1, tail1), (fl2, tail2) in itertools.combinations(tails, 2):
         try:
-            diff = word2vec_model[prefix + fl2 + tail2] - word2vec_model[tail2]
+            diff = word2vec_model[prefix + fl2 + tail2.lower()] - word2vec_model[tail2]
             predicted = word2vec_model[tail1] + diff
-            true_word = prefix + fl1 + tail1
+            true_word = prefix + fl1 + tail1.lower()
             true_index = word2vec_model.vocab[true_word].index
 
             result = annoy_knn(annoy_tree, predicted, true_index, rank_threshold)
@@ -76,13 +76,13 @@ def test_pair(pair1, pair2, word2vec_model, k=100, show=30):
     tail2 = pair2[2]
     assert prefix == prefix2
 
-    diff = word2vec_model[prefix + fl2 + tail2] - word2vec_model[tail2]
+    diff = word2vec_model[prefix + fl2 + tail2.lower()] - word2vec_model[tail2]
     predicted = word2vec_model[tail1] + diff
     # cosine similarity
     # true_vector = word2vec_model[prefix + fl1 + tail1]
     # similarities.append(np.dot(gensim.matutils.unitvec(true_vector), gensim.matutils.unitvec(predicted)))
 
-    true_word = prefix + fl1 + tail1
+    true_word = prefix + fl1 + tail1.lower()
 
     neighbours = word2vec_model.most_similar([predicted], topn=k)
 
