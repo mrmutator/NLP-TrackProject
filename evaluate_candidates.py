@@ -74,6 +74,8 @@ def evaluate_set(prefix, tails, word2vec_model, annoy_tree_file, rank_threshold=
         except KeyError:
             pass
 
+    annoy_tree.unload(annoy_tree_file)
+
     return prefix, float(counts[True]) / (counts[True] + counts[False]) if counts[True] + counts[False] > 0 else prefix, 0.0
 
 def test_pair(pair1, pair2, word2vec_model, k=100, show=30):
