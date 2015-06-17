@@ -2,7 +2,7 @@ __author__ = 'rwechsler'
 import cPickle as pickle
 import gensim
 import itertools
-import numpy as np
+import random
 from annoy import AnnoyIndex
 
 
@@ -44,24 +44,21 @@ def word2vec_knn(word2vec_model, vector, true_word, k=100):
         return False
 
 
-def evaluate_set(prefix, tails, word2vec_model, annoy_tree, rank_threshold=100):
-    # similarities = []
+def evaluate_set(prefix, tails, word2vec_model, annoy_tree, rank_threshold=100, sample_size=1000):
     counts = dict()
     counts[True] = 0
     counts[False] = 0
-    for (fl1, tail1), (fl2, tail2) in itertools.permutations(tails, 2):
+    if len(tails) > sample_size:
+        tails = random.sample(tails, sample_size)
+    for (fl1, tail1), (fl2, tail2) in itertools.combinations(tails, 2):
         try:
             diff = word2vec_model[prefix + fl2 + tail2] - word2vec_model[tail2]
             predicted = word2vec_model[tail1] + diff
-            # cosine similarity
-            # true_vector = word2vec_model[prefix + fl1 + tail1]
-            # similarities.append(np.dot(gensim.matutils.unitvec(true_vector), gensim.matutils.unitvec(predicted)))
-
             true_word = prefix + fl1 + tail1
             true_index = word2vec_model.vocab[true_word].index
 
-            #result = annoy_knn(annoy_tree, predicted, true_index, rank_threshold)
-            result = word2vec_knn(word2vec_model, predicted, true_word, rank_threshold)
+            result = annoy_knn(annoy_tree, predicted, true_index, rank_threshold)
+            #result = word2vec_knn(word2vec_model, predicted, true_word, rank_threshold)
 
             counts[result] += 1
 
@@ -77,25 +74,21 @@ if __name__ == "__main__":
     candidates = load_candidate_dump("models/comb_model.p")
     print "loading word2vec model"
     word2vec_model = load_word2vecmodel("models/mono_500_de.model")
-    #print "building annoy tree"
-    #annoy_tree = build_annoy_tree(word2vec_model, output_file_name="tree.ann")
-    # print "loading annoy tree"
-    # annoy_tree = load_annoy_tree("test.ann", word2vec_model)
-    annoy_tree = None
+    # print "building annoy tree"
+    # annoy_tree = build_annoy_tree(word2vec_model, output_file_name="tree.ann")
+    print "loading annoy tree"
+    annoy_tree = load_annoy_tree("tree.ann", word2vec_model)
 
     results = dict()
     for k in candidates:
-        # print k
-        # print evaluate_set(k, combinations[k], word2vec_model, annoy_tree)
-        # print "---"
 
         print k.encode("utf-8")
         print candidates[k]
-        result = evaluate_set(k, candidates[k], word2vec_model, annoy_tree, rank_threshold=100)
+        result = evaluate_set(k, candidates[k], word2vec_model, annoy_tree, rank_threshold=100, sample_size=500)
         print result
         if result > 0:
             results[k] = result
 
-    #print "pickling"
-    #pickle.dump(open("results.p", "wb"))
+    print "pickling"
+    pickle.dump(open("results.p", "wb"))
 
