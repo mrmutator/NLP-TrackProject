@@ -20,17 +20,17 @@ def load_candidate_dump(file_name):
 def load_word2vecmodel(file_name):
     return gensim.models.Word2Vec.load_word2vec_format(file_name, binary=True)
 
-def build_annoy_tree(word2vec_model, n_trees=100, output_file_name=None):
+def build_annoy_tree(word2vec_model,  output_file_name, n_trees=100):
     tree = AnnoyIndex(word2vec_model.layer1_size)
     for i, word in enumerate(word2vec_model.index2word):
         tree.add_item(i, list(word2vec_model[word]))
 
-    tree.build(n_trees) #
+    tree.build(n_trees)
 
-    if output_file_name:
-        tree.save(output_file_name)
 
-    return tree
+    tree.save(output_file_name)
+
+    return output_file_name
 
 def load_annoy_tree(model_file_name, word2vec_model):
     tree = AnnoyIndex(word2vec_model.layer1_size)
@@ -52,10 +52,11 @@ def word2vec_knn(word2vec_model, vector, true_word, k=100):
         return False
 
 
-def evaluate_set(prefix, tails, word2vec_model, annoy_tree, rank_threshold=100, sample_size=1000):
+def evaluate_set(prefix, tails, word2vec_model, annoy_tree_file, rank_threshold=100, sample_size=1000):
     counts = dict()
     counts[True] = 0
     counts[False] = 0
+    annoy_tree = load_annoy_tree(annoy_tree_file, word2vec_model)
     if len(tails) > sample_size:
         tails = random.sample(tails, sample_size)
     for (fl1, tail1), (fl2, tail2) in itertools.combinations(tails, 2):
@@ -73,7 +74,7 @@ def evaluate_set(prefix, tails, word2vec_model, annoy_tree, rank_threshold=100, 
         except KeyError:
             pass
 
-    return float(counts[True]) / (counts[True] + counts[False]) if counts[True] + counts[False] > 0 else 0
+    return prefix, float(counts[True]) / (counts[True] + counts[False]) if counts[True] + counts[False] > 0 else prefix, 0.0
 
 def test_pair(pair1, pair2, word2vec_model, k=100, show=30):
     """
@@ -105,21 +106,21 @@ def test_pair(pair1, pair2, word2vec_model, k=100, show=30):
     print "Found: ", true_word in neighbours
 
 
-def candidate_generator(candidates, annoy_tree, word2vec_model, rank_threshold, sample_size):
+def candidate_generator(candidates, annoy_tree_file, word2vec_model, rank_threshold, sample_size):
     for prefix in candidates:
-        yield (prefix, candidates[prefix], word2vec_model, annoy_tree, rank_threshold, sample_size)
+        yield (prefix, candidates[prefix], word2vec_model, annoy_tree_file, rank_threshold, sample_size)
 
 def mp_wrapper_evaluate_set(argument):
     return evaluate_set(*argument)
 
 
-def evaluate_candidates(candidates, annoy_tree, word2vec_model, rank_threshold=100, sample_size=500, processes=4):
+def evaluate_candidates(candidates, annoy_tree_file, word2vec_model, rank_threshold=100, sample_size=500, processes=4):
     pool = mp.Pool(processes=processes)
 
-    arguments = candidate_generator(candidates, annoy_tree, word2vec_model, rank_threshold, sample_size)
+    arguments = candidate_generator(candidates, annoy_tree_file, word2vec_model, rank_threshold, sample_size)
     results = pool.map(mp_wrapper_evaluate_set, arguments)
 
-    return zip(candidates.keys(), results)
+    return results
 
 
 if __name__ == "__main__":
@@ -153,23 +154,22 @@ if __name__ == "__main__":
     if not arguments.annoy_tree_file:
 
         print timestamp(), "building annoy tree"
-        annoy_tree = build_annoy_tree(word2vec_model, n_trees=arguments.n_annoy_trees, output_file_name=arguments.output_tree_file)
+        annoy_tree_file = build_annoy_tree(word2vec_model, n_trees=arguments.n_annoy_trees, output_file_name=arguments.output_tree_file)
 
     else:
         print timestamp(), "loading annoy tree"
-        annoy_tree = load_annoy_tree(arguments.annoy_tree_file, word2vec_model)
+        annoy_tree_file = arguments.annoy_tree_file
 
     if arguments.candidates_file and arguments.result_output_file:
         print timestamp(), "loading candidates"
         candidates = load_candidate_dump(arguments.candidates_file)
 
-        print timestamp(), "Evaluating candidates"
-        results = evaluate_candidates(candidates, annoy_tree, word2vec_model, rank_threshold=arguments.rank_threshold,
+        print timestamp(), "evaluating candidates"
+        results = evaluate_candidates(candidates, annoy_tree_file, word2vec_model, rank_threshold=arguments.rank_threshold,
                                       sample_size=arguments.sample_set_size, processes=arguments.n_processes)
 
         print timestamp(), "pickling"
         pickle.dump(results, open(arguments.result_output_file, "wb"))
-
 
     print timestamp(), "done"
 
