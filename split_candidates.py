@@ -25,4 +25,4 @@ for prefix, length in length_tuples:
 print lengths
 
 for i, split in enumerate(splits):
-    pickle.dump(split, open(sys.argv[1]+"."+str(i+1)), "wb")
+    pickle.dump(split, open(sys.argv[1]+"."+str(i+1), "wb"))
