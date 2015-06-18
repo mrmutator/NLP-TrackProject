@@ -36,30 +36,6 @@ def annoy_knn(annoy_tree, vector, true_index, k=100):
     else:
         return False
 
-
-def evaluate_set(prefix, tails, annoy_tree_file, vector_dims, rank_threshold=100, sample_size=1000):
-    counts = dict()
-    counts[True] = 0
-    counts[False] = 0
-    annoy_tree = load_annoy_tree(annoy_tree_file, vector_dims)
-    if len(tails) > sample_size:
-        tails = random.sample(tails, sample_size)
-    for (comp1, tail1), (comp2, tail2) in itertools.combinations(tails, 2):
-        try:
-            diff = np.array(annoy_tree.get_item_vector(comp2))- np.array(annoy_tree.get_item_vector(tail2))
-            predicted = np.array(annoy_tree.get_item_vector(tail1)) + diff
-
-            result = annoy_knn(annoy_tree, predicted, comp1, rank_threshold)
-
-            counts[result] += 1
-
-        except KeyError:
-            pass
-
-    annoy_tree.unload(annoy_tree_file)
-
-    return (prefix, float(counts[True]) / (counts[True] + counts[False])) if counts[True] + counts[False] > 0 else (prefix, 0.0)
-
 def test_pair(pair1, pair2, word2vec_model, k=100, show=30):
     """
     Only used in interactive mode so far.
