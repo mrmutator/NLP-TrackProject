@@ -90,17 +90,6 @@ def candidate_generator(candidates, rank_threshold, sample_size):
 def mp_wrapper_evaluate_set(argument):
     return evaluate_set(*argument)
 
-
-
-def evaluate_candidates(candidates, rank_threshold=100, sample_size=500, processes=4):
-    pool = mp.Pool(processes=processes)
-
-    arguments = candidate_generator(candidates, rank_threshold, sample_size)
-    results = pool.map(mp_wrapper_evaluate_set, arguments)
-
-    return results
-
-
 if __name__ == "__main__":
 
 
@@ -132,9 +121,6 @@ if __name__ == "__main__":
 
     def evaluate_set(prefix, tails, rank_threshold=100, sample_size=1000):
         global annoy_tree
-        print 'Start', mp.current_process().name
-        print 'Using', id(annoy_tree)
-
         counts = dict()
         counts[True] = 0
         counts[False] = 0
@@ -149,16 +135,9 @@ if __name__ == "__main__":
 
             counts[result] += 1
 
-        print 'End', mp.current_process().name
-
         return (prefix, float(counts[True]) / (counts[True] + counts[False])) if counts[True] + counts[False] > 0 else (prefix, 0.0)
 
     print timestamp(), "evaluating candidates"
-    # results = evaluate_candidates(candidates, annoy_tree, rank_threshold=arguments.rank_threshold,
-    #                               sample_size=arguments.sample_set_size, processes=arguments.n_processes)
-
-    print 'The global tree references', id(annoy_tree   )
-
     pool = mp.Pool(processes=arguments.n_processes)
     params = candidate_generator(candidates, arguments.rank_threshold, arguments.sample_set_size)
     results = pool.map(mp_wrapper_evaluate_set, params)
