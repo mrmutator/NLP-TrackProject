@@ -11,9 +11,6 @@ import time
 import datetime
 import numpy as np
 
-#lqrz
-import threading
-import Queue
 
 
 def timestamp():
@@ -39,26 +36,20 @@ def annoy_knn(annoy_tree, vector, true_index, k=100):
         return False
 
 
-def evaluate_set(prefix, tails, annoy_tree_file, vector_dims, rank_threshold=100, sample_size=1000):
+def evaluate_set(prefix, tails, rank_threshold=100, sample_size=1000):
     counts = dict()
     counts[True] = 0
     counts[False] = 0
-    annoy_tree = load_annoy_tree(annoy_tree_file, vector_dims)
     if len(tails) > sample_size:
         tails = random.sample(tails, sample_size)
     for (comp1, tail1), (comp2, tail2) in itertools.combinations(tails, 2):
-        try:
-            diff = np.array(annoy_tree.get_item_vector(comp2))- np.array(annoy_tree.get_item_vector(tail2))
-            predicted = np.array(annoy_tree.get_item_vector(tail1)) + diff
 
-            result = annoy_knn(annoy_tree, predicted, comp1, rank_threshold)
+        diff = np.array(annoy_tree.get_item_vector(comp2))- np.array(annoy_tree.get_item_vector(tail2))
+        predicted = np.array(annoy_tree.get_item_vector(tail1)) + diff
 
-            counts[result] += 1
+        result = annoy_knn(annoy_tree, predicted, comp1, rank_threshold)
 
-        except KeyError:
-            pass
-
-    annoy_tree.unload(annoy_tree_file)
+        counts[result] += 1
 
     return (prefix, float(counts[True]) / (counts[True] + counts[False])) if counts[True] + counts[False] > 0 else (prefix, 0.0)
 
@@ -92,91 +83,26 @@ def test_pair(pair1, pair2, word2vec_model, k=100, show=30):
     print "Found: ", true_word in neighbours
 
 
-def candidate_generator(candidates, annoy_tree_file, vector_dims, rank_threshold, sample_size):
+def candidate_generator(candidates, rank_threshold, sample_size):
     for prefix in candidates:
-        yield (prefix, candidates[prefix], annoy_tree_file, vector_dims, rank_threshold, sample_size)
+        yield (prefix, candidates[prefix], rank_threshold, sample_size)
 
 def mp_wrapper_evaluate_set(argument):
     return evaluate_set(*argument)
 
-# lqrz
-def evaluate_set_2(contentQueue, indexQueue):
-    counts = dict()
-    counts[True] = 0
-    counts[False] = 0
-
-    while not contentQueue.empty():
-        t = contentQueue.get()
-        prefix = t[0]
-        tails = t[1]
-        annoy_tree_file = t[2] 
-        vector_dims = t[3]
-        rank_threshold = t[4] 
-        sample_size = t[5]
-        annoy_tree = load_annoy_tree(annoy_tree_file, vector_dims)
-        if len(tails) > sample_size:
-            tails = random.sample(tails, sample_size)
-        for (comp1, tail1), (comp2, tail2) in itertools.combinations(tails, 2):
-            try:
-                diff = np.array(annoy_tree.get_item_vector(comp2))- np.array(annoy_tree.get_item_vector(tail2))
-                predicted = np.array(annoy_tree.get_item_vector(tail1)) + diff
-
-                result = annoy_knn(annoy_tree, predicted, comp1, rank_threshold)
-
-                counts[result] += 1
-
-            except KeyError:
-                pass
-
-    #annoy_tree.unload(annoy_tree_file)
 
 
-        #place tuple into out queue
-        tOut = (prefix, float(counts[True]) / (counts[True] + counts[False])) if counts[True] + counts[False] > 0 else (prefix, 0.0)
-        indexQueue.put(tOut)
-    
-        #signals to queue job is done
-        contentQueue.task_done()
+def evaluate_candidates(candidates, rank_threshold=100, sample_size=500, processes=4):
+    pool = mp.Pool(processes=processes)
 
-    #return (prefix, float(counts[True]) / (counts[True] + counts[False])) if counts[True] + counts[False] > 0 else (prefix, 0.0)
-
-
-def evaluate_candidates(candidates, annoy_tree_file, vector_dims, rank_threshold=100, sample_size=500, processes=4):
-#    pool = mp.Pool(processes=processes)
-
-#    arguments = candidate_generator(candidates, annoy_tree_file, vector_dims, rank_threshold, sample_size)
-#    results = pool.map(mp_wrapper_evaluate_set, arguments)
-
-    #lqrz
-    global contentQueue
-    global indexQueue
-
-    for prefix in candidates :
-        self.contentQueue.put(((prefix, candidates[prefix], annoy_tree_file, vector_dims, rank_threshold, sample_size)))
-        
-    nThreads = 4
-    
-    threads = [threading.Thread(target=evaluate_set_2, args=(contentQueue, indexQueue)) for _ in range(nThreads)]
-    
-    for t in threads:
-        t.setDaemon(True)
-        t.start()
-    
-    contentQueue.join()
-    
-    # returns tuples in the form: (prefix, acc)
-    results = [indexQueue.get() for _ in range(len(content))]
-
-    print results
+    arguments = candidate_generator(candidates, rank_threshold, sample_size)
+    results = pool.map(mp_wrapper_evaluate_set, arguments)
 
     return results
 
 
 if __name__ == "__main__":
 
-    #lqrz
-    contentQueue = Queue.Queue()
-    indexQueue = Queue.Queue()
 
     #### Default Parameters-------------------------------------------####
     rank_threshold = 100
@@ -200,8 +126,12 @@ if __name__ == "__main__":
     print timestamp(), "loading candidates"
     candidates = load_candidate_dump(arguments.candidates_index_file)
 
+    print timestamp(), "load annoy tree"
+    global annoy_tree
+    annoy_tree = load_annoy_tree(arguments.annoy_tree_file, arguments.vector_dims)
+
     print timestamp(), "evaluating candidates"
-    results = evaluate_candidates(candidates, arguments.annoy_tree_file, arguments.vector_dims, rank_threshold=arguments.rank_threshold,
+    results = evaluate_candidates(candidates, rank_threshold=arguments.rank_threshold,
                                   sample_size=arguments.sample_set_size, processes=arguments.n_processes)
 
     print timestamp(), "pickling"
