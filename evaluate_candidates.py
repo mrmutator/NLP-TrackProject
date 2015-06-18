@@ -117,7 +117,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Evaluate candidates')
     parser.add_argument('-d', action="store", dest="vector_dims", type=int, required=True)
-    parser.add_argument('-t', action="store", dest="annoy_tree_file")
+    parser.add_argument('-t', action="store", dest="annoy_tree_file", required=True)
     parser.add_argument('-c', action="store", dest="candidates_index_file", required=True)
     parser.add_argument('-o', action="store", dest="result_output_file", required=True)
     parser.add_argument('-p', action="store", dest="n_processes", type=int, default=n_processes)
@@ -139,6 +139,3 @@ if __name__ == "__main__":
     pickle.dump(results, open(arguments.result_output_file, "wb"))
 
     print timestamp(), "done"
-
-
-
