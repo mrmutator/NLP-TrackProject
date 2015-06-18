@@ -110,7 +110,6 @@ if __name__ == "__main__":
     #### Default Parameters-------------------------------------------####
     rank_threshold = 100
     sample_set_size = 500
-    n_annoy_trees = 100
     n_processes = 2
     ####End-Parametes-------------------------------------------------####
 
@@ -121,7 +120,6 @@ if __name__ == "__main__":
     parser.add_argument('-c', action="store", dest="candidates_index_file", required=True)
     parser.add_argument('-o', action="store", dest="result_output_file", required=True)
     parser.add_argument('-p', action="store", dest="n_processes", type=int, default=n_processes)
-    parser.add_argument('-n', action="store", dest="n_annoy_trees", type=int, default=n_annoy_trees)
     parser.add_argument('-s', action="store", dest="sample_set_size", type=int, default=sample_set_size)
     parser.add_argument('-r', action="store", dest="rank_threshold", type=int, default=rank_threshold)
 
