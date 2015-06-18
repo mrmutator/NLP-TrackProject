@@ -36,7 +36,7 @@ def annoy_knn(annoy_tree, vector, true_index, k=100):
         return False
 
 
-def evaluate_set(prefix, tails, rank_threshold=100, sample_size=1000):
+def evaluate_set(prefix, tails, annoy_tree, rank_threshold=100, sample_size=1000):
     counts = dict()
     counts[True] = 0
     counts[False] = 0
@@ -83,12 +83,9 @@ def test_pair(pair1, pair2, word2vec_model, k=100, show=30):
     print "Found: ", true_word in neighbours
 
 
-def candidate_generator(candidates, rank_threshold, sample_size):
-    for prefix in candidates:
-        yield (prefix, candidates[prefix], rank_threshold, sample_size)
 
-def mp_wrapper_evaluate_set(argument):
-    return evaluate_set(*argument)
+
+
 
 
 
@@ -127,8 +124,21 @@ if __name__ == "__main__":
     candidates = load_candidate_dump(arguments.candidates_index_file)
 
     print timestamp(), "load annoy tree"
-    global annoy_tree
     annoy_tree = load_annoy_tree(arguments.annoy_tree_file, arguments.vector_dims)
+
+    def mp_wrapper_evaluate_set(argument):
+        return evaluate_set(*argument)
+
+    def candidate_generator(candidates, annoy_tree, rank_threshold, sample_size):
+        for prefix in candidates:
+            yield (prefix, candidates[prefix], annoy_tree, rank_threshold, sample_size)
+
+    pool = mp.Pool(processes=arguments.n_processes)
+
+    arguments = candidate_generator(candidates, annoy_tree, rank_threshold, arguments.sample_set_size)
+    results = pool.map(mp_wrapper_evaluate_set, arguments)
+
+
 
     print timestamp(), "evaluating candidates"
     results = evaluate_candidates(candidates, rank_threshold=arguments.rank_threshold,
