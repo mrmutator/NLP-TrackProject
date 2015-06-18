@@ -108,11 +108,10 @@ if __name__ == "__main__":
     print 'Global annoy tree', id(annoy_tree)
 
     def evaluate_set(contentQueue, indexQueue):
-        counts = dict()
-        counts[True] = 0
-        counts[False] = 0
-
         while not contentQueue.empty():
+            counts = dict()
+            counts[True] = 0
+            counts[False] = 0
             t = contentQueue.get()
             prefix = t[0]
             tails = t[1]
