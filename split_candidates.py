@@ -6,7 +6,7 @@ import numpy as np
 
 candidates = pickle.load(open(sys.argv[1], "rb"))
 
-length_tuples = sorted([(c, len(candidates[c])) for c in candidates if len(candidates[c] > 1)], key=lambda t: t[1], reverse=True)
+length_tuples = sorted([(c, len(candidates[c])) for c in candidates if len(candidates[c]) > 1], key=lambda t: t[1], reverse=True)
 
 print len(length_tuples)
 
