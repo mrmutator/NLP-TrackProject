@@ -165,7 +165,7 @@ if __name__ == "__main__":
         annoy_tree_file = build_annoy_tree(word2vec_model, n_trees=arguments.n_annoy_trees, output_file_name=arguments.output_annoy_file)
 
     print timestamp(), "producing candidate index file"
-    produce_candidate_index(candidates, word2vec_model, arguments.candidate_index_file_name)
+    produce_candidate_index(candidates, word2vec_model, arguments.candidate_index_file)
 
     print timestamp(), "done."
 
