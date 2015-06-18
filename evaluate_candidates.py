@@ -11,6 +11,10 @@ import time
 import datetime
 import numpy as np
 
+#lqrz
+import threading
+import Queue
+
 
 def timestamp():
     return datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
@@ -95,17 +99,84 @@ def candidate_generator(candidates, annoy_tree_file, vector_dims, rank_threshold
 def mp_wrapper_evaluate_set(argument):
     return evaluate_set(*argument)
 
+# lqrz
+def evaluate_set_2(contentQueue, indexQueue):
+    counts = dict()
+    counts[True] = 0
+    counts[False] = 0
+
+    while not contentQueue.empty():
+        t = contentQueue.get()
+        prefix = t[0]
+        tails = t[1]
+        annoy_tree_file = t[2] 
+        vector_dims = t[3]
+        rank_threshold = t[4] 
+        sample_size = t[5]
+        annoy_tree = load_annoy_tree(annoy_tree_file, vector_dims)
+        if len(tails) > sample_size:
+            tails = random.sample(tails, sample_size)
+        for (comp1, tail1), (comp2, tail2) in itertools.combinations(tails, 2):
+            try:
+                diff = np.array(annoy_tree.get_item_vector(comp2))- np.array(annoy_tree.get_item_vector(tail2))
+                predicted = np.array(annoy_tree.get_item_vector(tail1)) + diff
+
+                result = annoy_knn(annoy_tree, predicted, comp1, rank_threshold)
+
+                counts[result] += 1
+
+            except KeyError:
+                pass
+
+    #annoy_tree.unload(annoy_tree_file)
+
+
+        #place tuple into out queue
+        tOut = (prefix, float(counts[True]) / (counts[True] + counts[False])) if counts[True] + counts[False] > 0 else (prefix, 0.0)
+        indexQueue.put(tOut)
+    
+        #signals to queue job is done
+        contentQueue.task_done()
+
+    #return (prefix, float(counts[True]) / (counts[True] + counts[False])) if counts[True] + counts[False] > 0 else (prefix, 0.0)
+
 
 def evaluate_candidates(candidates, annoy_tree_file, vector_dims, rank_threshold=100, sample_size=500, processes=4):
-    pool = mp.Pool(processes=processes)
+#    pool = mp.Pool(processes=processes)
 
-    arguments = candidate_generator(candidates, annoy_tree_file, vector_dims, rank_threshold, sample_size)
-    results = pool.map(mp_wrapper_evaluate_set, arguments)
+#    arguments = candidate_generator(candidates, annoy_tree_file, vector_dims, rank_threshold, sample_size)
+#    results = pool.map(mp_wrapper_evaluate_set, arguments)
+
+    #lqrz
+    global contentQueue
+    global indexQueue
+
+    for prefix in candidates :
+        self.contentQueue.put(((prefix, candidates[prefix], annoy_tree_file, vector_dims, rank_threshold, sample_size)))
+        
+    nThreads = 4
+    
+    threads = [threading.Thread(target=evaluate_set_2, args=(contentQueue, indexQueue)) for _ in range(nThreads)]
+    
+    for t in threads:
+        t.setDaemon(True)
+        t.start()
+    
+    contentQueue.join()
+    
+    # returns tuples in the form: (prefix, acc)
+    results = [indexQueue.get() for _ in range(len(content))]
+
+    print results
 
     return results
 
 
 if __name__ == "__main__":
+
+    #lqrz
+    contentQueue = Queue.Queue()
+    indexQueue = Queue.Queue()
 
     #### Default Parameters-------------------------------------------####
     rank_threshold = 100
