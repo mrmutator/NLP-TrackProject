@@ -127,12 +127,41 @@ if __name__ == "__main__":
     candidates = load_candidate_dump(arguments.candidates_index_file)
 
     print timestamp(), "load annoy tree"
-    global annoy_tree
+    # global annoy_tree
     annoy_tree = load_annoy_tree(arguments.annoy_tree_file, arguments.vector_dims)
 
+    def evaluate_set(prefix, tails, rank_threshold=100, sample_size=1000):
+        global annoy_tree
+        print 'Start', mp.current_process().name
+        print 'Using', id(annoy_tree)
+
+        counts = dict()
+        counts[True] = 0
+        counts[False] = 0
+        if len(tails) > sample_size:
+            tails = random.sample(tails, sample_size)
+        for (comp1, tail1), (comp2, tail2) in itertools.combinations(tails, 2):
+
+            diff = np.array(annoy_tree.get_item_vector(comp2))- np.array(annoy_tree.get_item_vector(tail2))
+            predicted = np.array(annoy_tree.get_item_vector(tail1)) + diff
+
+            result = annoy_knn(annoy_tree, predicted, comp1, rank_threshold)
+
+            counts[result] += 1
+
+        print 'End', mp.current_process().name
+
+        return (prefix, float(counts[True]) / (counts[True] + counts[False])) if counts[True] + counts[False] > 0 else (prefix, 0.0)
+
     print timestamp(), "evaluating candidates"
-    results = evaluate_candidates(candidates, rank_threshold=arguments.rank_threshold,
-                                  sample_size=arguments.sample_set_size, processes=arguments.n_processes)
+    # results = evaluate_candidates(candidates, annoy_tree, rank_threshold=arguments.rank_threshold,
+    #                               sample_size=arguments.sample_set_size, processes=arguments.n_processes)
+
+    print 'The global tree references', id(annoy_tree   )
+
+    pool = mp.Pool(processes=arguments.n_processes)
+    params = candidate_generator(candidates, arguments.rank_threshold, arguments.sample_set_size)
+    results = pool.map(mp_wrapper_evaluate_set, params)
 
     print timestamp(), "pickling"
     pickle.dump(results, open(arguments.result_output_file, "wb"))
