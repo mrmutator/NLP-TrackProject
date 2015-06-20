@@ -104,7 +104,8 @@ if __name__ == "__main__":
     # only store vectors that we need. And sample already.
     word2vec_vectors = dict()
     for cand in candidates:
-        candidates[cand] = set(random.sample(candidates[cand], arguments.sample_set_size))
+        if len(candidates[cand]) > arguments.sample_set_size:
+            candidates[cand] = set(random.sample(candidates[cand], arguments.sample_set_size))
         for i in candidates[cand]:
             word2vec_vectors[i] = np.array(word2vec_model.syn0[i])
 
