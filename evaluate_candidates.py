@@ -1,6 +1,5 @@
 __author__ = 'rwechsler'
 import cPickle as pickle
-import gensim
 import itertools
 import random
 from annoy import AnnoyIndex
@@ -18,10 +17,6 @@ def timestamp():
 
 def load_candidate_dump(file_name):
     return pickle.load(open(file_name, "rb"))
-
-def load_word2vecmodel(file_name):
-    return gensim.models.Word2Vec.load_word2vec_format(file_name, binary=True)
-
 
 def load_annoy_tree(model_file_name, vector_dims):
     tree = AnnoyIndex(vector_dims)
