@@ -35,23 +35,6 @@ def annoy_knn(annoy_tree, vector, true_index, k=100):
         return False
 
 
-def evaluate_set(prefix, tails, rank_threshold=100, sample_size=1000):
-    counts = dict()
-    counts[True] = 0
-    counts[False] = 0
-    if len(tails) > sample_size:
-        tails = random.sample(tails, sample_size)
-    for (comp1, tail1), (comp2, tail2) in itertools.combinations(tails, 2):
-
-        diff = np.array(annoy_tree.get_item_vector(comp2))- np.array(annoy_tree.get_item_vector(tail2))
-        predicted = np.array(annoy_tree.get_item_vector(tail1)) + diff
-
-        result = annoy_knn(annoy_tree, predicted, comp1, rank_threshold)
-
-        counts[result] += 1
-
-    return (prefix, float(counts[True]) / (counts[True] + counts[False])) if counts[True] + counts[False] > 0 else (prefix, 0.0)
-
 def test_pair(pair1, pair2, word2vec_model, k=100, show=30):
     """
     Only used in interactive mode so far.
@@ -82,9 +65,9 @@ def test_pair(pair1, pair2, word2vec_model, k=100, show=30):
     print "Found: ", true_word in neighbours
 
 
-def candidate_generator(candidates, rank_threshold, sample_size):
+def candidate_generator(candidates, rank_threshold):
     for prefix in candidates:
-        yield (prefix, candidates[prefix], rank_threshold, sample_size)
+        yield (prefix, candidates[prefix], rank_threshold)
 
 def mp_wrapper_evaluate_set(argument):
     return evaluate_set(*argument)
@@ -118,23 +101,30 @@ if __name__ == "__main__":
     print timestamp(), "loading word2vec model"
     word2vec_model = load_word2vecmodel(arguments.word2vec_file)
 
+    print timestamp(), "preprocess candidates"
+    # only store vectors that we need. And sample already.
+    word2vec_vectors = dict()
+    for cand in candidates:
+        candidates[cand] = set(random.sample(candidates[cand], arguments.sample_set_size))
+        for i in candidates[cand]:
+            word2vec_vectors[i] = np.array(word2vec_model.syn0[i])
+
+    del word2vec_model
 
     print timestamp(), "load annoy tree"
     # global annoy_tree
     annoy_tree = load_annoy_tree(arguments.annoy_tree_file, arguments.vector_dims)
 
-    def evaluate_set(prefix, tails, rank_threshold=100, sample_size=1000):
+    def evaluate_set(prefix, tails, rank_threshold=100):
         global annoy_tree
-        global word2vec_model
+        global word2vec_vectors
         counts = dict()
         counts[True] = 0
         counts[False] = 0
-        if len(tails) > sample_size:
-            tails = random.sample(tails, sample_size)
         for (comp1, tail1), (comp2, tail2) in itertools.combinations(tails, 2):
 
-            diff = word2vec_model.syn0[comp2]- word2vec_model.syn0[tail2]
-            predicted = word2vec_model.syn0[tail1] + diff
+            diff = word2vec_vectors[comp2]- word2vec_vectors[tail2]
+            predicted = word2vec_vectors[tail1] + diff
 
             result = annoy_knn(annoy_tree, predicted, comp1, rank_threshold)
 
@@ -144,7 +134,7 @@ if __name__ == "__main__":
 
     print timestamp(), "evaluating candidates"
     pool = mp.Pool(processes=arguments.n_processes)
-    params = candidate_generator(candidates, arguments.rank_threshold, arguments.sample_set_size)
+    params = candidate_generator(candidates, arguments.rank_threshold)
     results = pool.map(mp_wrapper_evaluate_set, params)
 
     print timestamp(), "pickling"
