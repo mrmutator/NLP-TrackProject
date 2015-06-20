@@ -98,12 +98,12 @@ if __name__ == "__main__":
     vector_dims = arguments.vector_dims
 
     def evaluate_set(prefix, tails, annoy_tree_file, vector_dims, rank_threshold=100, sample_size=1000):
-        
+        fname = ''.join(annoy_tree_file)
         annoy_tree = AnnoyIndex(vector_dims)
-        annoy_tree.load(annoy_tree_file)
+        annoy_tree.load(fname)
         # annoy_tree = load_annoy_tree(annoy_tree_file, vector_dims)
 
-        print mp.current_process().name, id(annoy_tree), prefix.encode('utf-8')
+        print mp.current_process().name, id(fname), id(annoy_tree), prefix.encode('utf-8')
         sys.stdout.flush()
 
         counts = dict()
