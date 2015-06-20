@@ -6,7 +6,7 @@ import numpy as np
 
 candidates = pickle.load(open(sys.argv[1], "rb"))
 
-length_tuples = sorted([(c, len(candidates[c])) for c in candidates if len(candidates[c]) > 1], key=lambda t: t[1], reverse=True)
+length_tuples = sorted([(c, min(500,len(candidates[c]))) for c in candidates if len(candidates[c]) > 1], key=lambda t: t[1], reverse=True)
 
 print "Number of valid rules: ", len(length_tuples)
 
@@ -20,7 +20,7 @@ lengths = [0 for i in range(num_splits)]
 for prefix, length in length_tuples:
     target = np.argmin(lengths)
     splits[target][prefix] = candidates[prefix]
-    lengths[target] += length
+    lengths[target] += length**2
 
 print "Length distribution:", lengths
 
