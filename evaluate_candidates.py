@@ -34,7 +34,6 @@ def annoy_knn(annoy_tree, vector, true_index, k=100):
     else:
         return False
 
-
 def test_pair(pair1, pair2, word2vec_model, k=100, show=30):
     """
     Only used in interactive mode so far.
@@ -117,10 +116,15 @@ if __name__ == "__main__":
 
     def evaluate_set(prefix, tails, rank_threshold=100):
         global annoy_tree
+
         global word2vec_vectors
         counts = dict()
         counts[True] = 0
         counts[False] = 0
+
+        #print mp.current_process().name, id(annoy_tree), id(word2vec_model), prefix.encode('utf-8')
+        #sys.stdout.flush()
+
         for (comp1, tail1), (comp2, tail2) in itertools.combinations(tails, 2):
 
             diff = word2vec_vectors[comp2]- word2vec_vectors[tail2]
