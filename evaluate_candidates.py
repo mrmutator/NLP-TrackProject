@@ -120,14 +120,14 @@ if __name__ == "__main__":
 
     def evaluate_set(prefix, tails, rank_threshold=100):
         global annoy_tree
-
         global word2vec_vectors
+
         counts = dict()
         counts[True] = 0
         counts[False] = 0
 
-        #print mp.current_process().name, id(annoy_tree), id(word2vec_model), prefix.encode('utf-8')
-        #sys.stdout.flush()
+        print mp.current_process().name, id(annoy_tree), id(word2vec_vectors), prefix.encode('utf-8')
+        sys.stdout.flush()
 
         for (comp1, tail1), (comp2, tail2) in itertools.combinations(tails, 2):
 
