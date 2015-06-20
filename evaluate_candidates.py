@@ -100,7 +100,7 @@ if __name__ == "__main__":
 
 
     parser = argparse.ArgumentParser(description='Evaluate candidates')
-    parser.add_argument('-w', actions='store', dest="word2vec_file", required=True)
+    parser.add_argument('-w', action='store', dest="word2vec_file", required=True)
     parser.add_argument('-d', action="store", dest="vector_dims", type=int, required=True)
     parser.add_argument('-t', action="store", dest="annoy_tree_file", required=True)
     parser.add_argument('-c', action="store", dest="candidates_index_file", required=True)
