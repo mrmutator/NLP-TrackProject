@@ -59,9 +59,9 @@ def test_pair(pair1, pair2, word2vec_model, k=100, show=30):
     print "Found: ", true_word in neighbours
 
 
-def candidate_generator(candidates, rank_threshold, sample_size, annoy_tree_file, vector_dims):
+def candidate_generator(candidates, rank_threshold, sample_size, annoy_tree_file, vector_dims, lock):
     for prefix in candidates:
-        yield (prefix, candidates[prefix], annoy_tree_file, vector_dims, rank_threshold, sample_size)
+        yield (prefix, candidates[prefix], annoy_tree_file, vector_dims, lock, rank_threshold, sample_size)
 
 def mp_wrapper_evaluate_set(argument):
     return evaluate_set(*argument)
@@ -97,10 +97,18 @@ if __name__ == "__main__":
     annoy_tree_file = arguments.annoy_tree_file
     vector_dims = arguments.vector_dims
 
-    def evaluate_set(prefix, tails, annoy_tree_file, vector_dims, rank_threshold=100, sample_size=1000):
-        fname = ''.join(annoy_tree_file)
-        annoy_tree = AnnoyIndex(vector_dims)
-        annoy_tree.load(fname)
+    lock = mp.Lock()
+
+    def evaluate_set(prefix, tails, annoy_tree_file, vector_dims, lock, rank_threshold=100, sample_size=1000):
+
+        #fname = ''.join(annoy_tree_file)
+        lock.acquire()
+        try:
+            annoy_tree = AnnoyIndex(vector_dims)
+            annoy_tree.load(annoy_tree_file)
+        finally:
+            lock.release()
+
         # annoy_tree = load_annoy_tree(annoy_tree_file, vector_dims)
 
         print mp.current_process().name, id(fname), id(annoy_tree), prefix.encode('utf-8')
@@ -128,7 +136,7 @@ if __name__ == "__main__":
 
     print timestamp(), "evaluating candidates"
     pool = mp.Pool(processes=arguments.n_processes)
-    params = candidate_generator(candidates, arguments.rank_threshold, arguments.sample_set_size, annoy_tree_file, vector_dims)
+    params = candidate_generator(candidates, arguments.rank_threshold, arguments.sample_set_size, annoy_tree_file, vector_dims, lock)
     results = pool.map(mp_wrapper_evaluate_set, params)
 
     print timestamp(), "pickling"
