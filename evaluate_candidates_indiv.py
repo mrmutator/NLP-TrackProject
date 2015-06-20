@@ -96,8 +96,9 @@ if __name__ == "__main__":
     #annoy_tree = load_annoy_tree(arguments.annoy_tree_file, arguments.vector_dims)
     annoy_tree_file = arguments.annoy_tree_file
     vector_dims = arguments.vector_dims
-
-    lock = mp.Lock()
+    
+    manager = mp.Manager()
+    lock = manager.Lock()
 
     def evaluate_set(prefix, tails, annoy_tree_file, vector_dims, lock, rank_threshold=100, sample_size=1000):
 
@@ -111,7 +112,7 @@ if __name__ == "__main__":
 
         # annoy_tree = load_annoy_tree(annoy_tree_file, vector_dims)
 
-        print mp.current_process().name, id(fname), id(annoy_tree), prefix.encode('utf-8')
+        print mp.current_process().name, id(annoy_tree), prefix.encode('utf-8')
         sys.stdout.flush()
 
         counts = dict()
