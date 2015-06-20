@@ -9,6 +9,7 @@ import argparse
 import time
 import datetime
 import numpy as np
+import gensim
 
 
 
@@ -22,6 +23,9 @@ def load_annoy_tree(model_file_name, vector_dims):
     tree = AnnoyIndex(vector_dims)
     tree.load(model_file_name)
     return tree
+
+def load_word2vecmodel(file_name):
+    return gensim.models.Word2Vec.load_word2vec_format(file_name, binary=True)
 
 def annoy_knn(annoy_tree, vector, true_index, k=100):
     neighbours = annoy_tree.get_nns_by_vector(list(vector), k)
@@ -96,6 +100,7 @@ if __name__ == "__main__":
 
 
     parser = argparse.ArgumentParser(description='Evaluate candidates')
+    parser.add_argument('-w', actions='store', dest="word2vec_file", required=True)
     parser.add_argument('-d', action="store", dest="vector_dims", type=int, required=True)
     parser.add_argument('-t', action="store", dest="annoy_tree_file", required=True)
     parser.add_argument('-c', action="store", dest="candidates_index_file", required=True)
@@ -110,12 +115,17 @@ if __name__ == "__main__":
     print timestamp(), "loading candidates"
     candidates = load_candidate_dump(arguments.candidates_index_file)
 
+    print timestamp(), "loading word2vec model"
+    word2vec_model = load_word2vecmodel(arguments.word2vec_file)
+
+
     print timestamp(), "load annoy tree"
     # global annoy_tree
     annoy_tree = load_annoy_tree(arguments.annoy_tree_file, arguments.vector_dims)
 
     def evaluate_set(prefix, tails, rank_threshold=100, sample_size=1000):
         global annoy_tree
+        global word2vec_model
         counts = dict()
         counts[True] = 0
         counts[False] = 0
@@ -123,8 +133,8 @@ if __name__ == "__main__":
             tails = random.sample(tails, sample_size)
         for (comp1, tail1), (comp2, tail2) in itertools.combinations(tails, 2):
 
-            diff = np.array(annoy_tree.get_item_vector(comp2))- np.array(annoy_tree.get_item_vector(tail2))
-            predicted = np.array(annoy_tree.get_item_vector(tail1)) + diff
+            diff = word2vec_model.syn0[comp2]- word2vec_model.syn0[tail2]
+            predicted = word2vec_model.syn0[tail1] + diff
 
             result = annoy_knn(annoy_tree, predicted, comp1, rank_threshold)
 
