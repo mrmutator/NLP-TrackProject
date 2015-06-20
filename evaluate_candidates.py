@@ -106,10 +106,13 @@ if __name__ == "__main__":
     for cand in candidates:
         if len(candidates[cand]) > arguments.sample_set_size:
             candidates[cand] = set(random.sample(candidates[cand], arguments.sample_set_size))
-        for i in candidates[cand]:
+        for (i,j) in candidates[cand]:
             word2vec_vectors[i] = np.array(word2vec_model.syn0[i])
+            word2vec_vectors[j] = np.array(word2vec_model.syn0[j])
 
     del word2vec_model
+
+    print timestamp(), "number of vectors: ", len(word2vec_vectors)
 
     print timestamp(), "load annoy tree"
     # global annoy_tree
