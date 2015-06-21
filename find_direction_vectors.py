@@ -91,9 +91,8 @@ if __name__ == "__main__":
         global word2vec_vectors
 
         evidence = dict()
-
+        print len(tails), prefix
         for (comp1, tail1) in tails:
-            counts[(comp1, tail1)] = 0
             evidence[(comp1, tail1)] = set()
             diff = word2vec_vectors[comp1]- word2vec_vectors[tail1]
             for (comp2, tail2) in tails:
