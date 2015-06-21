@@ -7,7 +7,7 @@ import numpy as np
 candidates = pickle.load(open(sys.argv[1], "rb"))
 hit_rates = pickle.load(open(sys.argv[3], "rb"))
 
-lower_bound = sys.argv[4]
+lower_bound = float(sys.argv[4])
 
 length_tuples = sorted([(c, min(500,len(candidates[c]))) for c in candidates if hit_rates.get(c,0) > lower_bound], key=lambda t: t[1], reverse=True)
 
