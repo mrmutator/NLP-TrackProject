@@ -12,6 +12,10 @@ import random
 from nltk import FreqDist
 from nltk.corpus import PlaintextCorpusReader
 import gensim
+from tsne import tsne
+import numpy as Math
+import pylab
+import codecs
 
 def plotGraph(samples, word, dimensions):
     if dimensions == '2D':
@@ -94,27 +98,71 @@ def loadW2VModel(path):
 
     return gensim.models.Word2Vec.load_word2vec_format(path, binary=True)
 
-
-
-if __name__ == '__main__':
+def plotPca():
     # n_components = 3
-
     modelPathDe = '../NLP2-Project2/models/mono_800_de.bin'
-
     # Load word2vec trained models
     print('Loading word2vec models...')
     model = loadW2VModel(modelPathDe)
-
     word1 = 'Hauptbahnhof'
     tail1 = 'Bahnhof'
     word2 = 'Hauptstadt'
     tail2 = 'Stadt'
-
     words = dict()
     words['word1'] = word1
     words['tail1'] = tail1
     words['word2'] = word2
     words['tail2'] = tail2
     words['model'] = model
-
     constructSamplesAndPlot(**words)
+
+
+def plotTsne():
+    w2vThreshold = 2
+    filenames = ['Haupt.txt', 'Super.txt', 'Kinder.txt', 'Bundes.txt', 'Finanz.txt']
+    # filenames = ['Haupt.txt', 'Bundes.txt']
+    w2vPath = '../NLP2-Project2/models/mono_500_de.bin'
+    # w2vPath = '../NLP2-Project2/models/mono_200_de.bin'
+    dimensions = 500
+    # dimensions = 200
+
+    colours = ['#f02720', '#ff7f0f', '#32a251', '#1f77b4', '#ab6ad5']
+
+    words = set()
+
+    rawLabels = []
+
+    for i, fname in enumerate(filenames):
+        f = codecs.open(fname, 'rb', encoding='utf-8')
+        for l in f:
+            clean = l.strip().split(' ')
+            if clean[0] > w2vThreshold:
+                words.add(clean[1])
+                rawLabels.append(colours[i])
+
+    model = loadW2VModel(w2vPath)
+
+    X = Math.empty((0, dimensions))
+    # labels = Math.empty((1),dtype=float)
+
+    labels = []
+
+    for i,w in enumerate(words):
+        try:
+            rep = model[w]
+            X = Math.r_[X, rep[Math.newaxis,:]]
+            labels.append(rawLabels[i])
+        except KeyError:
+            continue
+
+    # X = Math.loadtxt()
+    # labels = Math.loadtxt()
+    Y = tsne(X, 2, dimensions, 20.0, max_iter=1000)
+    pylab.scatter(Y[:,0], Y[:,1], 18, marker='o', c=labels, edgecolor='None')
+    pylab.savefig('scatter.png')
+    # pylab.show()
+
+if __name__ == '__main__':
+    # plotPca()
+
+    plotTsne()
