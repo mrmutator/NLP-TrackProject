@@ -90,32 +90,32 @@ if __name__ == "__main__":
         global annoy_tree
         global word2vec_vectors
 
+        evidence = dict()
+
+        for (comp1, tail1) in tails:
+            counts[(comp1, tail1)] = 0
+            evidence[(comp1, tail1)] = set()
+            diff = word2vec_vectors[comp1]- word2vec_vectors[tail1]
+            for (comp2, tail2) in tails:
+                predicted = word2vec_vectors[tail2] + diff
+                result = annoy_knn(annoy_tree, predicted, comp2, rank_threshold)
+                if result:
+                    evidence[(comp1, tail1)].add((comp2, tail2))
+
         direction_vectors = []
-
-        while len(tails) > evidence_threshold:
-
-            counts = dict()
-            evidence = dict()
-
-            for (comp1, tail1) in tails:
-                counts[(comp1, tail1)] = 0
-                evidence[(comp1, tail1)] = set()
-                diff = word2vec_vectors[comp1]- word2vec_vectors[tail1]
-                for (comp2, tail2) in tails:
-                    predicted = word2vec_vectors[tail2] + diff
-
-                    result = annoy_knn(annoy_tree, predicted, comp2, rank_threshold)
-
-                    if result:
-                        counts[(comp1, tail1)] += 1
-                        evidence[(comp1, tail1)].add((comp2, tail2))
+        first_time = True
+        while len(tails) > evidence_threshold or first_time:
+            first_time = False
 
             # find best vector
-            best_comp_pair = max(counts, key=counts.get)
-            direction_vectors.append((best_comp_pair, evidence[best_comp_pair]))
+            best_comp_pair = max(evidence, key=lambda k: len(evidence[k]))
+            direction_vectors.append((best_comp_pair, set(evidence[best_comp_pair])))
 
             # remove evidence
             tails = tails - evidence[best_comp_pair]
+            for comp in evidence:
+                evidence[comp] = evidence[comp] - evidence[best_comp_pair]
+            del evidence[best_comp_pair]
 
         return (prefix, direction_vectors)
 
