@@ -4,6 +4,11 @@ import cPickle as pickle
 from annoy import AnnoyIndex
 import gensim
 import time
+import argparse
+import sys
+import numpy as np
+import random
+import multiprocessing as mp
 
 
 def timestamp():
@@ -31,9 +36,6 @@ def annoy_knn(annoy_tree, vector, true_index, k=100):
 def candidate_generator(candidates, rank_threshold, evidence_threshold):
     for prefix in candidates:
         yield (prefix, candidates[prefix], rank_threshold, evidence_threshold)
-
-def mp_wrapper_evaluate_set(argument):
-    return evaluate_set(*argument)
 
 if __name__ == "__main__":
 
@@ -105,7 +107,7 @@ if __name__ == "__main__":
                     result = annoy_knn(annoy_tree, predicted, comp2, rank_threshold)
 
                     if result:
-                        counts[result] += 1
+                        counts[(comp1, tail1)] += 1
                         evidence[(comp1, tail1)].add((comp2, tail2))
 
             # find best vector
@@ -116,6 +118,9 @@ if __name__ == "__main__":
             tails = tails - evidence[best_comp_pair]
 
         return (prefix, direction_vectors)
+
+    def mp_wrapper_evaluate_set(argument):
+        return find_direction_vectors(*argument)
 
     print timestamp(), "evaluating direction vectors"
     pool = mp.Pool(processes=arguments.n_processes)
