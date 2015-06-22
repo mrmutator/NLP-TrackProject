@@ -165,16 +165,21 @@ def plotTsne():
 
 def plotScatterPca():
     w2vThreshold = 2
-    filenames = ['Arbeit.txt', 'Mann.txt', 'Ministerium.txt', 'Stadt.txt']
-    # filenames = ['Haupt.txt', 'Bundes.txt']
-    w2vPath = '../NLP2-Project2/models/mono_500_de.bin'
-    # w2vPath = '../NLP2-Project2/models/mono_200_de.bin'
+
+    prefix = True
+
+    if prefix:
+        filenames = ['Haupt.txt', 'Bundes.txt', 'Super.txt', 'Finanz.txt']
+    else:
+        filenames = ['Arbeit.txt', 'Mann.txt', 'Ministerium.txt', 'Stadt.txt']
+
+    w2vPath = 'models/mono_500_de.bin'
+
     dimensions = 500
-    # dimensions = 200
 
     colours = ['#f02720', '#ff7f0f', '#32a251', '#1f77b4', '#ab6ad5']
 
-    words = set()
+    words = []
 
     rawLabels = []
 
@@ -183,7 +188,7 @@ def plotScatterPca():
         for l in f:
             clean = l.strip().split(' ')
             if clean[0] > w2vThreshold:
-                words.add(clean[1])
+                words.append(clean[1])
                 rawLabels.append(colours[i])
 
     model = loadW2VModel(w2vPath)
@@ -216,12 +221,12 @@ def plotScatterPca():
     plt.xlabel('Feature 1')
     plt.ylabel('Feature 2')
 #     plt.xlim([-4,4])
-    plt.ylim([-.8,.8])
+#     plt.ylim([-.8,.8])
     plt.legend()
     plt.title('Word embeddings PCA')
 
     pylab.scatter(sklearn_transf[:,0], sklearn_transf[:,1], 18, marker='o', c=labels, edgecolor='None')
-    pylab.savefig('scatter.png')
+    pylab.savefig('scatter'+str(prefix)+'.png')
     # pylab.show()
 
 if __name__ == '__main__':
