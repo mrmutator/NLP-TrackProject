@@ -2,14 +2,15 @@ import cPickle as pickle
 import sys
 import numpy as np
 
-# argument1=candidate_index_file, argument2=number_of_splits, argument3=hit_rates_results_file, argument4=lower_bound (>)
+# argument1=candidate_index_file, argument2=number_of_splits, argument3=hit_rates_results_file, argument4=lower_bound (>), argument5 = minimum evidence length
 
 candidates = pickle.load(open(sys.argv[1], "rb"))
 hit_rates = pickle.load(open(sys.argv[3], "rb"))
 
 lower_bound = float(sys.argv[4])
+minimum_length = int(sys.argv[5])
 
-length_tuples = sorted([(c, min(500,len(candidates[c]))) for c in candidates if hit_rates.get(c,0) > lower_bound], key=lambda t: t[1], reverse=True)
+length_tuples = sorted([(c, min(500,len(candidates[c]))) for c in candidates if hit_rates.get(c,0) > lower_bound and len(candidates[c]) >= minimum_length], key=lambda t: t[1], reverse=True)
 
 print "Number of valid rules: ", len(length_tuples)
 
