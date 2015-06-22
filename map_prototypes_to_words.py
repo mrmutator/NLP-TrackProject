@@ -29,9 +29,8 @@ if __name__ == "__main__":
     outfile = codecs.open(arguments.output_file, "w", "utf-8")
 
     for candidate in prototype_set:
-        print candidate
         for prototype, evidence_set in candidate[1]:
-            outfile.write(candidate[0] + "\t" + word2vec_model.index2word[prototype] + "\t" + " ".join([word2vec_model.index2word[i] for i in evidence_set]) + "\n")
+            outfile.write(candidate[0] + "\t" + word2vec_model.index2word[prototype[1]] + "\t" + " ".join([word2vec_model.index2word[t[1]] for t in evidence_set]) + "\n")
 
     outfile.close()
 
