@@ -101,19 +101,19 @@ if __name__ == "__main__":
                     evidence[(comp1, tail1)].add((comp2, tail2))
 
         direction_vectors = []
-        first_time = True
-        while len(tails) > evidence_threshold or first_time:
-            first_time = False
-
+        bool_continue = True
+        while bool_continue:
+            bool_continue = False
             # find best vector
             best_comp_pair = max(evidence, key=lambda k: len(evidence[k]))
-            direction_vectors.append((best_comp_pair, set(evidence[best_comp_pair])))
+            if len(evidence[best_comp_pair]) >= evidence_threshold:
+                direction_vectors.append((best_comp_pair, set(evidence[best_comp_pair])))
+                bool_continue = True
 
-            # remove evidence
-            tails = tails - evidence[best_comp_pair]
-            for comp in evidence:
-                evidence[comp] = evidence[comp] - evidence[best_comp_pair]
-            del evidence[best_comp_pair]
+                # remove evidence
+                for comp in evidence:
+                    evidence[comp] = evidence[comp] - evidence[best_comp_pair]
+                del evidence[best_comp_pair]
 
         return (prefix, direction_vectors)
 
