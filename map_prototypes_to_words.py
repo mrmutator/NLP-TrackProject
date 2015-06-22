@@ -19,7 +19,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Evaluate candidates')
     parser.add_argument('-w', action='store', dest="word2vec_file", required=True)
     parser.add_argument('-p', action='store', dest='prototype_file', required=True)
-    parser.add_argument('-o', action="store", dest='output_file' required=True)
+    parser.add_argument('-o', action="store", dest='output_file', required=True)
 
     arguments = parser.parse_args(sys.argv[1:])
 
@@ -29,9 +29,9 @@ if __name__ == "__main__":
     outfile = codecs.open(arguments.output_file, "w", "utf-8")
 
     for candidate in prototype_set:
-        prototypes = prototype_set[candidate]
-        for prototype, evidence_set in prototypes:
-            outfile.write(candidate + "\t" + word2vec_model.index2word[prototype] + "\t" + " ".join([word2vec_model.index2word[i] for i in evidence_set]) + "\n")
+        print candidate
+        for prototype, evidence_set in candidate[1]:
+            outfile.write(candidate[0] + "\t" + word2vec_model.index2word[prototype] + "\t" + " ".join([word2vec_model.index2word[i] for i in evidence_set]) + "\n")
 
     outfile.close()
 
