@@ -20,7 +20,7 @@ def get_word_representation(prefix, comp_index, tail_index, word2vec_model):
         fl = comp[len(prefix):-len(tail)]
 
         if fl:
-            fl = "[" + "]"
+            fl = "[" + fl + "]"
 
         return fl + tail
 
