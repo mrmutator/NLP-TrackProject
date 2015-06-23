@@ -37,9 +37,8 @@ if __name__ == "__main__":
 
     outfile = codecs.open(arguments.output_file, "w", "utf-8")
 
-    for candidate in prototype_set:
-        for prototype, evidence_set in candidate[1]:
-            prefix = candidate[0]
+    for prefix in prototype_set:
+        for prototype, evidence_set in prototype_set[prefix]:
 
             outfile.write(prefix + "\t" + get_word_representation(prefix, prototype[0], prototype[1], word2vec_model)
                           + "\t" + " ".join([get_word_representation(prefix, t[0], t[1], word2vec_model)for t in evidence_set]) + "\n")
