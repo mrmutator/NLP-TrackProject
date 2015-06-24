@@ -43,13 +43,13 @@ def mp_wrapper_evaluate_set(argument):
     return evaluate_set(*argument)
 
 def get_nn_hitrate(ranks):
-    return len(ranks) - ranks.count(0) / len(ranks)
+    return (len(ranks) - ranks.count(0)) / float(len(ranks))
 
 def get_sim_hitrate(similarities, threshold):
-    return np.sum(1 for s in similarities if s >= threshold) / float(len(similarities))
+    return np.sum([1 for s in similarities if s >= threshold]) / float(len(similarities))
 
 def get_average_rank(ranks):
-    return np.mean(r for r in ranks if r > 0)
+    return np.mean([r for r in ranks if r > 0] or 0)
 
 def get_average_similarity(similarities):
     return np.mean(similarities)
@@ -109,7 +109,6 @@ if __name__ == "__main__":
                 evaluation_set[(prefix, prototype)] = evidence_set
 
 
-
     print timestamp(), "preprocess candidates"
     # only store vectors that we need. And sample already.
     word2vec_vectors = dict()
@@ -139,6 +138,7 @@ if __name__ == "__main__":
 
         prefix, vector_pair = prefix_prototype_pair
         diff = word2vec_vectors[vector_pair[0]]- word2vec_vectors[vector_pair[1]]
+
 
         for comp, tail in evidence_set:
             predicted = word2vec_vectors[tail] + diff
