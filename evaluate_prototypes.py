@@ -187,7 +187,7 @@ if __name__ == "__main__":
     outfile = codecs.open(arguments.result_output_file, "w", "utf-8")
     for prefix in scores:
         for vector in scores[prefix]:
-            outfile.write("\t".join([prefix, vector] + map(str, scores[prefix][vector])))
+            outfile.write("\t".join([prefix, vector] + map(str, scores[prefix][vector])) + "\n")
 
     outfile.close()
 
