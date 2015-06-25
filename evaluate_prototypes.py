@@ -10,6 +10,8 @@ import sys
 import random
 from scipy import spatial
 import multiprocessing as mp
+from collections import defaultdict
+import codecs
 
 def timestamp():
     return datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
@@ -61,6 +63,15 @@ def get_hitrate(ranks, similarities, threshold):
             count += 1
     return count / float(len(ranks))
 
+def get_word_representation(prefix, comp_index, tail_index, word2vec_model):
+        comp = word2vec_model.index2word[comp_index]
+        tail = word2vec_model.index2word[tail_index]
+        fl = comp[len(prefix):-len(tail)]
+
+        if fl:
+            fl = "[" + fl + "]"
+
+        return fl + tail
 
 
 if __name__ == "__main__":
@@ -158,7 +169,28 @@ if __name__ == "__main__":
     params = candidate_generator(evaluation_set, arguments.rank_threshold, arguments.sim_threshold)
     results = pool.map(mp_wrapper_evaluate_set, params)
 
+
     print timestamp(), "pickling"
     pickle.dump(results, open(arguments.result_output_file, "wb"))
+
+
+    print timestamp(), "loading word2vec model"
+    word2vec_model = load_word2vecmodel(arguments.word2vec_file)
+
+    print timestamp(), "mapping indices to word"
+    scores = defaultdict(dict)
+    for ((prefix, vector), scores) in results:
+        vector_repr = get_word_representation(prefix, vector[0], vector[1], word2vec_model)
+        scores[prefix][vector_repr] = scores
+
+    print timestamp(), "writing result file"
+    outfile = codecs.open(arguments.result_output_file, "w", "utf-8")
+    for prefix in scores:
+        for vector in scores[prefix]:
+            outfile.write("\t".join([prefix, vector] + map(str, scores)))
+
+    outfile.close()
+
+
 
     print timestamp(), "done"
