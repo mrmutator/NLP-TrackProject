@@ -37,6 +37,15 @@ def get_rank_annoy_knn(annoy_tree, vector, true_index, k=100):
     except ValueError:
         return 0
 
+def get_rank_word2vec_knn(word2vec_model, vector, true_index, k=100):
+    neighbours, _ = zip(*word2vec_model.most_similar(positive=[vector], topn=k))
+
+    try:
+        return neighbours.index(word2vec_model.index2word[true_index]) + 1
+    except ValueError:
+        return 0
+
+
 def candidate_generator(evaluation_set, rank_threshold, sim_threshold):
     for prefix_prototype_pair in evaluation_set:
         yield (prefix_prototype_pair, evaluation_set[prefix_prototype_pair], rank_threshold, sim_threshold)
@@ -78,6 +87,7 @@ if __name__ == "__main__":
 
     #### Default Parameters-------------------------------------------####
     rank_threshold = 30
+    vector_dims = 500
     sim_threshold = 0.5
     sample_set_size = np.inf
     n_processes = 2
@@ -87,8 +97,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Evaluate candidates')
     parser.add_argument('-w', action='store', dest="word2vec_file", required=True)
     parser.add_argument('-v', action="store", dest="prototypes_file", required=True)
-    parser.add_argument('-d', action="store", dest="vector_dims", type=int, required=True)
-    parser.add_argument('-t', action="store", dest="annoy_tree_file", required=True)
+    parser.add_argument('-d', action="store", dest="vector_dims", type=int, default=vector_dims)
+    parser.add_argument('-t', action="store", dest="annoy_tree_file")
     parser.add_argument('-c', action="store", dest="candidates_index_file")
     parser.add_argument('-o', action="store", dest="result_output_file", required=True)
     parser.add_argument('-p', action="store", dest="n_processes", type=int, default=n_processes)
@@ -132,16 +142,22 @@ if __name__ == "__main__":
         word2vec_vectors[prototype_tup[1][0]] = np.array(word2vec_model.syn0[prototype_tup[1][0]])
         word2vec_vectors[prototype_tup[1][1]] = np.array(word2vec_model.syn0[prototype_tup[1][1]])
 
-    del word2vec_model
 
     print timestamp(), "number of vectors: ", len(word2vec_vectors)
 
-    print timestamp(), "load annoy tree"
-    # global annoy_tree
-    annoy_tree = load_annoy_tree(arguments.annoy_tree_file, arguments.vector_dims)
+    if arguments.annoy_tree_file and arguments.vector_dims:
+        del word2vec_model
+        print timestamp(), "loading annoy tree"
+        # global annoy_tree
+        model = load_annoy_tree(arguments.annoy_tree_file, arguments.vector_dims)
+        knn_method = get_rank_annoy_knn
+    else:
+        print timestamp(), "using word2vec model"
+        model = word2vec_model
+        knn_method = get_rank_word2vec_knn
 
     def evaluate_set(prefix_prototype_pair, evidence_set, rank_threshold=100, sim_threshold=0.5):
-        global annoy_tree
+        global model
         global word2vec_vectors
 
         ranks = []
@@ -154,7 +170,7 @@ if __name__ == "__main__":
         for comp, tail in evidence_set:
             predicted = word2vec_vectors[tail] + diff
             true_vector = word2vec_vectors[comp]
-            rank = get_rank_annoy_knn(annoy_tree, predicted, comp, rank_threshold)
+            rank = knn_method(model, predicted, comp, rank_threshold)
             ranks.append(rank)
             sim = spatial.distance.cosine(predicted, true_vector)
             similarities.append(sim)
@@ -174,8 +190,11 @@ if __name__ == "__main__":
     pickle.dump(results, open(arguments.result_output_file, "wb"))
 
 
-    print timestamp(), "loading word2vec model"
-    word2vec_model = load_word2vecmodel(arguments.word2vec_file)
+    if not arguments.annoy_tree_file:
+        print timestamp(), "loading word2vec model"
+        word2vec_model = load_word2vecmodel(arguments.word2vec_file)
+    else:
+        word2vec_model = model
 
     print timestamp(), "mapping indices to word"
     scores = defaultdict(dict)
