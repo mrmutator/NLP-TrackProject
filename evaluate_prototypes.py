@@ -179,15 +179,15 @@ if __name__ == "__main__":
 
     print timestamp(), "mapping indices to word"
     scores = defaultdict(dict)
-    for ((prefix, vector), scores) in results:
+    for ((prefix, vector), eval_scores) in results:
         vector_repr = get_word_representation(prefix, vector[0], vector[1], word2vec_model)
-        scores[prefix][vector_repr] = scores
+        scores[prefix][vector_repr] = eval_scores
 
     print timestamp(), "writing result file"
     outfile = codecs.open(arguments.result_output_file, "w", "utf-8")
     for prefix in scores:
         for vector in scores[prefix]:
-            outfile.write("\t".join([prefix, vector] + map(str, scores)))
+            outfile.write("\t".join([prefix, vector] + map(str, scores[prefix][vector])))
 
     outfile.close()
 
