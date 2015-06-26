@@ -38,6 +38,8 @@ def get_rank_annoy_knn(annoy_tree, vector, true_index, k=100):
         return 0
 
 def get_rank_word2vec_knn(word2vec_model, vector, true_index, k=100):
+    print id(word2vec_model)
+    sys.stdout.flush()
     neighbours, _ = zip(*word2vec_model.most_similar(positive=[vector], topn=k))
 
     try:
@@ -160,7 +162,8 @@ if __name__ == "__main__":
         global model
         global word2vec_vectors
 
-        print id(model)
+        print "global", id(model)
+        sys.stdout.flush()
 
         ranks = []
         similarities = []
