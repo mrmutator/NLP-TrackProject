@@ -160,6 +160,8 @@ if __name__ == "__main__":
         global model
         global word2vec_vectors
 
+        print id(model)
+
         ranks = []
         similarities = []
 
