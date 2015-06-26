@@ -111,8 +111,9 @@ if __name__ == "__main__":
                 bool_continue = True
 
                 # remove evidence
+                best_evidence = set(evidence[best_comp_pair])
                 for comp in evidence:
-                    evidence[comp] = evidence[comp] - evidence[best_comp_pair]
+                    evidence[comp] = evidence[comp] - best_evidence
                 del evidence[best_comp_pair]
 
         return (prefix, direction_vectors)
