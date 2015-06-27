@@ -1,7 +1,6 @@
 __author__ = 'lqrz'
 
 import cPickle as pickle
-import gensim
 import logging
 import pdb
 from nltk.corpus import PlaintextCorpusReader
@@ -223,12 +222,13 @@ if __name__ == '__main__':
         multiprocessed = sys.argv[6]
         nWorkers = sys.argv[7]
         outPath = sys.argv[8]
-        nAccuracy = sys.argv[9]
-        similarityThreshold = sys.argv[10]
+        nAccuracy = int(sys.argv[9])
+        similarityThreshold = float(sys.argv[10])
 
     elif len(sys.argv)>1:
         print 'Error in params'
         exit()
+
 
     idx = corpusPath.rfind('/') + 1
     folder = corpusPath[0:idx]
