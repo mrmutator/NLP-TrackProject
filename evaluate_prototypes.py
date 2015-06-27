@@ -28,7 +28,7 @@ def load_prototype_dump(file_name):
     return pickle.load(open(file_name, "rb"))
 
 def load_word2vecmodel(file_name):
-    return gensim.models.Word2Vec.load(file_name, mmap="r")
+    return gensim.models.Word2Vec.load_word2vec_format(file_name, binary=True)
 
 def get_rank_annoy_knn(annoy_tree, vector, true_index, k=100):
     neighbours = annoy_tree.get_nns_by_vector(list(vector), k)
