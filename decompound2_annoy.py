@@ -21,7 +21,7 @@ logger.addHandler(hdlr)
 logger.setLevel(logging.DEBUG)
 
 
-def decompound((inputCompound, nAccuracy)):
+def decompound((inputCompound, nAccuracy, bestSimilarity)):
 
     global annoy_tree
     global vectors
@@ -92,7 +92,7 @@ def decompound((inputCompound, nAccuracy)):
     # apply direction vectors to splits
     logger.info('Applying direction vectors to possible splits')
     representations = set()
-    bestSimilarity = 0.46 # so we do not split "Bahnhof" = ["Bahn", "Hof"]
+    # bestSimilarity = 0.46 # so we do not split "Bahnhof" = ["Bahn", "Hof"]
     best = None
     maxEvidence = 0
     bestEvidence = None
@@ -210,8 +210,10 @@ if __name__ == '__main__':
 
     # multiprocessed = True
     # nWorkers = 4
+    #TODO: define threshold
+    # nAccuracy= 100
 
-    if len(sys.argv) == 9:
+    if len(sys.argv) == 11:
         resultsPath = sys.argv[1]
         # w2vPath = sys.argv[2]
         annoyTreeFile = sys.argv[2]
@@ -221,6 +223,8 @@ if __name__ == '__main__':
         multiprocessed = sys.argv[6]
         nWorkers = sys.argv[7]
         outPath = sys.argv[8]
+        nAccuracy = sys.argv[9]
+        similarityThreshold = sys.argv[10]
 
     elif len(sys.argv)>1:
         print 'Error in params'
@@ -239,9 +243,6 @@ if __name__ == '__main__':
     logger.debug('Words in corpus')
     logger.debug(inputCompounds)
 
-    #TODO: define threshold
-    nAccuracy= 100
-
     debug = False
 
     logger.info('Getting pickled direction vectors file')
@@ -259,7 +260,8 @@ if __name__ == '__main__':
     if multiprocessed:
         logger.info('Instantiating pool with '+str(nWorkers))
         pool = mp.Pool(processes=int(nWorkers))
-        results = pool.map(decompound, zip(inputCompounds, [nAccuracy]*len(inputCompounds)))
+        results = pool.map(decompound, zip(inputCompounds, [nAccuracy]*len(inputCompounds), \
+                                           [similarityThreshold]*len(inputCompounds)))
     else:
         results = []
         for inputCompound in inputCompounds:
