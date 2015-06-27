@@ -190,12 +190,15 @@ if __name__ == "__main__":
     params = candidate_generator(evaluation_set, arguments.rank_threshold, arguments.sim_threshold)
     results = pool.map(mp_wrapper_evaluate_set, params)
 
+    pool.close()
+    pool.join()
+    del pool
 
     print timestamp(), "pickling"
     pickle.dump(results, open(arguments.result_output_file, "wb"))
 
 
-    if not arguments.annoy_tree_file:
+    if arguments.annoy_tree_file:
         print timestamp(), "loading word2vec model"
         word2vec_model = load_word2vecmodel(arguments.word2vec_file)
     else:
