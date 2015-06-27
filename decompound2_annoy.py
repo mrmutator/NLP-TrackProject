@@ -5,6 +5,7 @@ import gensim
 import logging
 import pdb
 from nltk.corpus import PlaintextCorpusReader
+from nltk.tokenize import WhitespaceTokenizer
 import sys
 import multiprocessing as mp
 import codecs
@@ -232,7 +233,7 @@ if __name__ == '__main__':
     logger.debug('Corpus folder: '+folder)
     logger.debug('Corpus filename: '+filename)
 
-    corpus = PlaintextCorpusReader(folder, filename, encoding='utf-8')
+    corpus = PlaintextCorpusReader(folder, filename, word_tokenizer=WhitespaceTokenizer(), encoding='utf-8')
     inputCompounds = corpus.words()
 
     logger.debug('Words in corpus')
