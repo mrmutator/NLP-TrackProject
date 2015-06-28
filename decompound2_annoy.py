@@ -31,6 +31,22 @@ def decompound((inputCompound, nAccuracy, bestSimilarity)):
     if len(inputCompound) == 0:
         return []
 
+    try:
+        logger.debug('Looking up word '+inputCompound+' in index dict')
+        inputCompoundIndex = pickledIndexes[inputCompound]
+        logger.debug('Found key in index dict for word '+inputCompound)
+    except KeyError:
+        logger.debug('ERROR COULDNT FIND KEY '+inputCompound+' IN INDEX VECTOR')
+        return [(inputCompound, 'Noinputrep', '')]
+
+    try:
+        logger.debug('Looking up index '+str(inputCompoundIndex))
+        inputCompoundRep = pickledVectors[inputCompoundIndex]
+        logger.debug('Found key in vector dict for index '+str(inputCompoundIndex))
+    except KeyError:
+        logger.debug('ERROR COULDNT FIND KEY '+str(inputCompoundIndex)+' IN VECTOR DICT')
+        return [(inputCompound, 'Noinputrep', '')]
+
     # get all matching prefixes
     logger.info('Getting all matching prefixes')
     prefixes = set()
@@ -86,7 +102,7 @@ def decompound((inputCompound, nAccuracy, bestSimilarity)):
     if len(splits) == 0:
         logger.error('Cannot decompound '+inputCompound)
         # exit()
-        return [(inputCompound, '', '')]
+        return [(inputCompound, 'Notailrep', '')]
 
     # apply direction vectors to splits
     logger.info('Applying direction vectors to possible splits')
@@ -136,22 +152,6 @@ def decompound((inputCompound, nAccuracy, bestSimilarity)):
                 logger.error('Problem found when retrieving KNN for prediction representation')
                 logger.error(list(predictionRepresentation))
                 exit()
-
-            try:
-                logger.debug('Looking up word '+inputCompound+' in index dict')
-                inputCompoundIndex = pickledIndexes[inputCompound]
-                logger.debug('Found key in index dict for word '+inputCompound)
-            except KeyError:
-                logger.debug('ERROR COULDNT FIND KEY '+inputCompound+' IN INDEX VECTOR')
-                continue
-
-            try:
-                logger.debug('Looking up index '+str(inputCompoundIndex))
-                inputCompoundRep = pickledVectors[inputCompoundIndex]
-                logger.debug('Found key in vector dict for index '+str(inputCompoundIndex))
-            except KeyError:
-                logger.debug('ERROR COULDNT FIND KEY '+str(inputCompoundIndex)+' IN VECTOR DICT')
-                continue
 
             try:
                 rank = [i for i, nei in enumerate(neighbours) if nei == inputCompoundIndex][0]
