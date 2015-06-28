@@ -2,8 +2,7 @@ __author__ = 'rwechsler'
 import codecs
 import sys
 import numpy as np
-import defaultdict
-
+from collections import defaultdict
 infile = codecs.open(sys.argv[1], "r", "utf-8")
 
 sums = np.array([0,0,0,0,0])
