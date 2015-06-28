@@ -15,7 +15,7 @@ for line in infile:
     els = line.strip().split("\t")
     result =  els[2:]
     prefixes[els[0]].append(result)
-    sums += np.array(result)
+    sums = sums + np.array(result)
 
 infile.close()
 
