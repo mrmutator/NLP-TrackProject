@@ -45,6 +45,7 @@ if __name__ == '__main__':
         fresults = codecs.open(resultsFile, 'r', encoding='utf-8')
 
         for l in fresults:
+            totalResults += 1
             cleanLine = l.strip('\n').split('\t')
             resultSplit = ' '.join([cleanLine[1], cleanLine[2]]).strip()
             resultsCompounds[cleanLine[0]] = resultSplit
@@ -58,9 +59,7 @@ if __name__ == '__main__':
                 continue
 
             coverage += 1
-            totalResults += 1
 
-    totalGold = 0
     lineNr = 0
     for l in fgold:
         lineNr += 1
@@ -86,9 +85,9 @@ if __name__ == '__main__':
         if resultsCompounds[compound] in goldSplit:
             accuracy += 1
 
-        totalGold += 1
 
-    assert totalResults == totalGold, 'Total nr of lines in gold file does not match total nr lines in results file'
+    assert lineNr-2 == totalResults, 'Total nr of lines in gold file does not match total nr lines in results file '+\
+        str(lineNr-2)+' '+str(totalResults)
 
     # Stats
     logger.info('Total number of examples: '+str(totalGold))
