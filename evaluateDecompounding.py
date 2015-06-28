@@ -42,6 +42,8 @@ if __name__ == '__main__':
 
     fgold = codecs.open(goldFile, 'r', encoding='utf-8')
 
+#    fout = codecs.open('outFile','w',encoding='utf-8')
+
     totalResults = 0
     for resultsFile in resultsFiles:
         fresults = codecs.open(resultsFile, 'r', encoding='utf-8')
@@ -97,8 +99,12 @@ if __name__ == '__main__':
 
         if resultsCompounds[compound] in goldSplit:
             accuracy += 1
+#            fout.write(resultsCompounds[compound]+' ')
+#            for e in goldSplit:
+#                fout.write(e+' ')
+#            fout.write('\n')
 
-
+#    fout.close()
     assert lineNr-2 == totalResults, 'Total nr of lines in gold file does not match total nr lines in results file '+\
         str(lineNr-2)+' '+str(totalResults)
 
@@ -106,17 +112,18 @@ if __name__ == '__main__':
 
     # Stats
     logger.info('Total number of examples: '+str(lineNr-2))
-    logger.info('Coverage: '+str(coverage)+' '+str(coverage/float(lineNr-2))) # Measured against all word in gold file.
 
     logger.info('Examples for which no splits were found: '+str(noSplitsAtAll)+' '+\
                 str(noSplitsAtAll/float(lineNr-2)))
     logger.info('No input representation found: '+str(noInputRepresentation)+' '+\
-                str(noSplitsAtAll/float(lineNr-2)))
+                str(noInputRepresentation/float(lineNr-2)))
     logger.info('No tail representation found: '+str(noTailRepresentation)+' '+\
-                str(noSplitsAtAll/float(lineNr-2)))
+                str(noTailRepresentation/float(lineNr-2)))
 
     logger.info('Examples for which weak prefixes were found: '+str(discardedSplits)+' '+\
-                str(discardedSplits/float((coverage)))) # Measured against split compounds.
-    logger.info('Accuracy: '+str(accuracy/float(coverage))) # Measured against split compounds.
+                str(discardedSplits/float(lineNr-2-noSplitsAtAll)))
+
+    logger.info('Nr of compounds that were split: '+str(coverage)+' '+str(coverage/float(lineNr-2))) # Measured against all word in gold file.
+    logger.info('Accuracy: '+str(accuracy)+' '+str(accuracy/float(coverage))) # Measured against split compounds.
 
     logger.info('End')
