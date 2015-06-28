@@ -90,12 +90,12 @@ if __name__ == '__main__':
         str(lineNr-2)+' '+str(totalResults)
 
     # Stats
-    logger.info('Total number of examples: '+str(totalGold))
-    logger.info('Coverage: '+str(coverage)+' '+str(coverage/float(totalGold)))
+    logger.info('Total number of examples: '+str(lineNr-2))
+    logger.info('Coverage: '+str(coverage)+' '+str(coverage/float(lineNr-2)))
     logger.info('Examples for which no splits were found: '+str(noSplitsAtAll)+' '+\
-                str(noSplitsAtAll/float(totalGold)))
+                str(noSplitsAtAll/float(lineNr-2)))
     logger.info('Examples for which weak prefixes were found: '+str(discardedSplits)+' '+\
-                str(discardedSplits/float((totalGold))))
-    logger.info('Accuracy: '+str(accuracy/float(totalGold)))
+                str(discardedSplits/float((lineNr-2))))
+    logger.info('Accuracy: '+str(accuracy/float(lineNr-2)))
 
     logger.info('End')
