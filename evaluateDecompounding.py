@@ -12,10 +12,10 @@ logger.addHandler(hdlr)
 logger.setLevel(logging.DEBUG)
 
 if __name__ == '__main__':
-    # goldFile = 'decompounding/lqrz_compounds.test' # has to start with 2 lines of header
+    goldFile = 'decompounding/lqrz_compounds.test' # has to start with 2 lines of header
     # # resultsFiles = glob.glob('/home/lquiroz/jobs/decompound/100_046/output*/results.txt')
-    # resultsFiles = glob.glob('output*/results.txt')
-    # resultsFolder = 'decompounding' # without last /
+    resultsFiles = glob.glob('output*/results.txt')
+    resultsFolder = 'decompounding' # without last /
 
     if len(sys.argv) == 3:
         goldFile = sys.argv[1]
@@ -65,22 +65,22 @@ if __name__ == '__main__':
     for l in fgold:
         lineNr += 1
         # if lineNr < 3:
-        if lineNr < 40:
+        if lineNr < 3:
             continue
         goldSplit = set()
         idx = l.strip('\n').find('|')
         if idx <>-1:
             # multiple possibilities
-            compound = l.strip('\n').split('\t')[0]
-            modifier1 = l.strip('\n').split('\t')[1].split('|')[0]
-            modifier2 = l.strip('\n').split('\t')[1].split('|')[1].title() # the 2nd modifier appears lowercased.\
+            compound = l.strip('\n').split('\t')[0].strip()
+            modifier1 = l.strip('\n').split('\t')[1].split('|')[0].strip()
+            modifier2 = l.strip('\n').split('\t')[1].split('|')[1].strip().title() # the 2nd modifier appears lowercased.\
                                                                             #  Should be upppercase
-            head = l.strip('\n').split('\t')[2]
+            head = l.strip('\n').split('\t')[2].strip()
             goldSplit.add(' '.join([modifier1, head]))
             goldSplit.add(' '.join([modifier2, head]))
         else:
-            compound = l.strip('\n').split('\t')[0]
-            goldSplit.add(' '.join([l.strip('\n').split('\t')[1],l.strip('\n').split('\t')[2]]))
+            compound = l.strip('\n').split('\t')[0].strip()
+            goldSplit.add(' '.join([l.strip('\n').split('\t')[1].strip(),l.strip('\n').split('\t')[2].strip()]))
 
 
         if resultsCompounds[compound] in goldSplit:
