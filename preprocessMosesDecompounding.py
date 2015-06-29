@@ -4,7 +4,7 @@ import sys
 
 if __name__ == '__main__':
 
-    # mosesResults = 'MT/pastedResults' #TODO:hardcoded
+    # mosesResults = 'MT/mosesCompound_full_results' #TODO:hardcoded
     # outFile = 'MT/pastedResults_mod' #TODO:hardcoded
 
     if len(sys.argv)==3:
@@ -27,8 +27,10 @@ if __name__ == '__main__':
             split = '\t'.join([split1,rest])
         elif len(l.strip().split())==3:
             split = l.strip().split()[1]+'\t'+l.strip().split()[2]
-        else:
+        elif len(l.strip().split())==2:
             split = l.strip().split()[1:][0]+'\t'+''
+        else:
+            split = l.strip()
 
         fout.write(compound+'\t'+split+'\n')
 
