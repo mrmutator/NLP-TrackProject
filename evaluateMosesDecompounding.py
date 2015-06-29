@@ -17,10 +17,9 @@ if __name__ == '__main__':
     # resultsFiles = glob.glob('output*/results.txt')
     # resultsFolder = 'decompounding' # without last /
 
-    if len(sys.argv) == 4:
+    if len(sys.argv) == 3:
         goldFile = sys.argv[1]
-        resultsFolder = sys.argv[2]
-        resultFile = sys.argv[3]
+        resultFile = sys.argv[2]
     elif len(sys.argv) > 1:
         logger.error('Bad params.')
         exit()
