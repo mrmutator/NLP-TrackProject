@@ -41,15 +41,10 @@ if __name__ == '__main__':
 
         print 'Processing th: ' + str(th)
 
-        fout = codecs.open('MT/words_threshold_'+str(th),'w',encoding='utf-8')
-
-        if th == 0:
-            for word in set(fd_test.keys()) - set(fd_train.keys()):
-                fout.write(word + '\t' + str(0) + '\n')
-            continue
+        fout = codecs.open('MT/words_threshold_'+str(th), 'w', encoding='utf-8')
 
         for word in fd_test.keys():
-            if fd_train[word] < th:
+            if fd_train[word] <= th:
                 fout.write(word + '\t' + str(fd_train[word]) + '\n')
 
         fout.close()
