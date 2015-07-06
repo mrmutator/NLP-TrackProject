@@ -223,7 +223,7 @@ if __name__ == '__main__':
         corpusPath = sys.argv[3]
         pickledIndexesPath = sys.argv[4]
         pickledVectorsPath = sys.argv[5]
-        multiprocessed = sys.argv[6]
+        multiprocessed = sys.argv[6] == 'True'
         nWorkers = sys.argv[7]
         outPath = sys.argv[8]
         nAccuracy = int(sys.argv[9])
@@ -269,14 +269,15 @@ if __name__ == '__main__':
     else:
         results = []
         for inputCompound in inputCompounds:
-            try:
-                inputCompoundIndex = pickledIndexes[inputCompound]
-                compoundRepresentation = pickledVectors[inputCompoundIndex]
-                results.append(decompound((inputCompound, nAccuracy)))
-            except KeyError:
-                logger.error('No word2vec representation for input compound'+inputCompound)
-                # exit()
-                results.append(inputCompound)
+            # try:
+            #     inputCompoundIndex = pickledIndexes[inputCompound]
+            #     compoundRepresentation = pickledVectors[inputCompoundIndex]
+            #     results.append(decompound((inputCompound, nAccuracy)))
+            results.append(decompound((inputCompound, nAccuracy, similarityThreshold)))
+            # except KeyError:
+            #     logger.error('No word2vec representation for input compound'+inputCompound)
+            #     # exit()
+            #     results.append(inputCompound)
 
 
     print results
