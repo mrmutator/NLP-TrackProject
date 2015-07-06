@@ -26,6 +26,7 @@ def decompound((inputCompound, nAccuracy, bestSimilarity)):
     global vectors
     global pickledIndexes
     global pickledVectors
+    global globalNN
 
 
     if len(inputCompound) == 0:
@@ -146,7 +147,8 @@ def decompound((inputCompound, nAccuracy, bestSimilarity)):
 
             logger.debug('Getting Annoy KNN')
             try:
-                neighbours = annoy_tree.get_nns_by_vector(list(predictionRepresentation), nAccuracy)
+                # neighbours = annoy_tree.get_nns_by_vector(list(predictionRepresentation), nAccuracy)
+                neighbours = annoy_tree.get_nns_by_vector(list(predictionRepresentation), globalNN)[:100]
                 logger.debug(neighbours)
             except:
                 logger.error('Problem found when retrieving KNN for prediction representation')
@@ -211,6 +213,8 @@ if __name__ == '__main__':
     # nWorkers = 4
     #TODO: define threshold
     # nAccuracy= 100
+
+    globalNN = 500
 
     if len(sys.argv) == 11:
         resultsPath = sys.argv[1]
