@@ -1,8 +1,8 @@
 __author__ = 'rwechsler'
 import codecs
-from collections import defaultdict
 import gensim
 import re
+import numpy as np
 
 def load_word2vecmodel(file_name):
     return gensim.models.Word2Vec.load_word2vec_format(file_name, binary=True)
@@ -25,34 +25,50 @@ def load_prototypes(file_name):
 
 def get_vector(obj, word2vec_model, prototypes):
     if isinstance(obj, unicode):
-        return word2vec_model[obj], 0
-    elif isinstance(obj, tuple)
-        prefix = obj[0]
-        tail = obj[1]
-        protoype = prototypes[prefix]
-        pro_compound = prefix + protoype[0] + protoype[1].lower()
-        diff = word2vec_model[pro_compound] - word2vec_model[protoype[1]]
-        compound_vec = word2vec_model[tail] + diff
-        return compound_vec, 1
+        try:
+            return word2vec_model[obj], 0
+        except KeyError:
+            return None, 0
+    elif isinstance(obj, tuple):
+        try:
+            prefix = obj[0]
+            tail = obj[1]
+            protoype = prototypes[prefix]
+            pro_compound = prefix + protoype[0] + protoype[1].lower()
+            diff = word2vec_model[pro_compound] - word2vec_model[protoype[1]]
+            compound_vec = word2vec_model[tail] + diff
+            return compound_vec, 1
+        except KeyError:
+            return None, 0
 
 
 if __name__ == "__main__":
 
-    word2vec_model = load_word2vecmodel("test/mini_500_de.bin")
-    prototypes = load_prototypes("data/prototypes_6_100.txt")
+    baseline = False
 
-    infile = codecs.open("data/splitting/100_46_results.txt","r", "utf-8")
-    outfile = codecs.open("data/splitting/output.txt", "w", "utf-8")
+    word2vec_model = load_word2vecmodel("mono_500_de.bin")
+    prototypes = load_prototypes("prototypes_6_100.txt")
+
+    infile = codecs.open("splitting_results.txt","r", "utf-8")
+    outfile = codecs.open("similarity_output.txt", "w", "utf-8")
 
     elements = []
     c = 0
-    for line in infile:
-        els = line.strip().split("\t")
-        if len(els) > 2:
-            elements.append(tuple(els[1:]))
-        else:
+
+
+    if baseline:
+        for line in infile:
+            els = line.strip().split("\t")
             elements.append(els[0],)
-        c += 1
+            c += 1
+    else:
+        for line in infile:
+            els = line.strip().split("\t")
+            if len(els) > 2:
+                elements.append(tuple(els[1:]))
+            else:
+                elements.append(els[0],)
+            c += 1
 
 
     infile.close()
@@ -62,9 +78,28 @@ if __name__ == "__main__":
     pairs = zip(elements[:length/2], elements[length/2:])
 
 
+    counts = []
 
     for pair in pairs:
-        vec1 = get_vector(pair[0], word2vec_model, prototypes)
-        vec2 = get_vector(pair[1], word2vec_model, prototypes)
-        sim = 
+        w1 = pair[0]
+        w2 = pair[1]
+        vec1, i = get_vector(w1, word2vec_model, prototypes)
+        vec2, j = get_vector(w2, word2vec_model, prototypes)
 
+        if isinstance(w1, unicode):
+            w1 = (w1,)
+        if isinstance(w2, unicode):
+            w2 = (w2,)
+
+        if vec1 is not None and vec2 is not None:
+            sim = np.dot(gensim.matutils.unitvec(vec1), gensim.matutils.unitvec(vec2))
+            counts.append(i + j)
+            outfile.write(";".join(["|".join(pair[0]), "|".join(pair[1]), str(sim)]) + "\n")
+        else:
+            outfile.write(";".join(["|".join(pair[0]), "|".join(pair[1]), "NA"]) + "\n")
+
+    outfile.close()
+
+    print "Total: ", sum(counts)
+    print "Both: ", counts.count(2)
+    print "Single: ", counts.count(1)
