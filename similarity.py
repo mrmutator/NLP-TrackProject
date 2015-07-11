@@ -3,6 +3,7 @@ import codecs
 import gensim
 import re
 import numpy as np
+from scipy.stats import spearmanr
 
 def load_word2vecmodel(file_name):
     return gensim.models.Word2Vec.load_word2vec_format(file_name, binary=True)
@@ -41,6 +42,15 @@ def get_vector(obj, word2vec_model, prototypes):
         except KeyError:
             return None, 0
 
+def read_gold_sim(file_name):
+    values = []
+    infile = codecs.open(file_name, "r", "utf-8")
+    for line in infile:
+        els = line.strip().split(";")
+        values.append(els[2])
+
+    return values
+
 
 if __name__ == "__main__":
 
@@ -77,9 +87,12 @@ if __name__ == "__main__":
 
     pairs = zip(elements[:length/2], elements[length/2:])
 
+    annotated = read_gold_sim("gold.txt")
 
     counts = []
-
+    sims = []
+    gold = []
+    c = 0
     for pair in pairs:
         w1 = pair[0]
         w2 = pair[1]
@@ -95,11 +108,22 @@ if __name__ == "__main__":
             sim = np.dot(gensim.matutils.unitvec(vec1), gensim.matutils.unitvec(vec2))
             counts.append(i + j)
             outfile.write(";".join(["|".join(w1), "|".join(w2), str(sim)]) + "\n")
+            sims.append(sim)
+            gold.append(annotated[c])
         else:
             outfile.write(";".join(["|".join(w1), "|".join(w2), "NA"]) + "\n")
 
-    outfile.close()
+        c += 1
 
-    print "Total: ", sum(counts)
-    print "Both: ", counts.count(2)
-    print "Single: ", counts.count(1)
+
+    outfile.write("------------\n")
+    outfile.write("Total: " + str(sum(counts)) + "\n")
+    outfile.write("Both: " + str(counts.count(2)) + "\n")
+    outfile.write("Single: " + str(counts.count(1)) + "\n")
+    outfile.write("Pairs used: " + str(len(sims)))
+
+    s, p = spearmanr(sims, gold)
+
+    outfile.write("Spearman R: " + str(s) + "\n")
+    outfile.write("P: " + str(p) + "\n")
+    outfile.close()
