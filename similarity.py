@@ -94,9 +94,9 @@ if __name__ == "__main__":
         if vec1 is not None and vec2 is not None:
             sim = np.dot(gensim.matutils.unitvec(vec1), gensim.matutils.unitvec(vec2))
             counts.append(i + j)
-            outfile.write(";".join(["|".join(pair[0]), "|".join(pair[1]), str(sim)]) + "\n")
+            outfile.write(";".join(["|".join(w1), "|".join(w2), str(sim)]) + "\n")
         else:
-            outfile.write(";".join(["|".join(pair[0]), "|".join(pair[1]), "NA"]) + "\n")
+            outfile.write(";".join(["|".join(w1), "|".join(w2), "NA"]) + "\n")
 
     outfile.close()
 
