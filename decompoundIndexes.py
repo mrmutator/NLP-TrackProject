@@ -4,10 +4,7 @@ import logging
 from nltk.corpus import PlaintextCorpusReader
 import pickle
 import numpy as np
-
-
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger()
+import sys
 
 
 def decompound(inputCompound):
@@ -80,10 +77,25 @@ def decompound(inputCompound):
 
 if __name__ == '__main__':
 
-    resultsPath = 'results/dir_vecs_4_100.p'
-    corpusPath = './prueba.txt'
-    outPath = 'splits.txt'
-    w2vPath = 'models/mono_500_de.bin'
+    if len(sys.argv) == 5:
+        resultsPath = sys.argv[1]
+        corpusPath = sys.argv[2]
+        w2vPath = sys.argv[3]
+        resultsFolder = sys.argv[4]
+    elif len(sys.argv) > 1:
+        print 'Error in params'
+        exit()
+
+    logging.basicConfig(level=logging.DEBUG)
+    logger = logging.getLogger()
+
+    # resultsPath = 'results/dir_vecs_4_100.p'
+    # corpusPath = './prueba.txt'
+    # outPath = 'splits.txt'
+    # w2vPath = 'models/mono_500_de.bin'
+
+    indexesPickleFilename = resultsFolder + 'decompoundIndexes.p'
+    vectorsPickleFilename = resultsFolder + 'decompoundVectors.p'
 
     resultIndexes = dict()
     resultVectors = dict()
@@ -115,5 +127,5 @@ if __name__ == '__main__':
             continue
 
     logger.info('Pickling files')
-    pickle.dump(resultIndexes, open('decompoundIndexes.p','wb'))
-    pickle.dump(resultVectors, open('decompoundVectors.p','wb'))
+    pickle.dump(resultIndexes, open(indexesPickleFilename,'wb'))
+    pickle.dump(resultVectors, open(vectorsPickleFilename,'wb'))

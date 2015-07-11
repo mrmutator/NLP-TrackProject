@@ -1,7 +1,7 @@
 __author__ = 'lqrz'
 import codecs
 import logging
-import glob
+# import glob
 import sys
 
 logger = logging.getLogger('')
@@ -12,19 +12,20 @@ logger.addHandler(hdlr)
 logger.setLevel(logging.DEBUG)
 
 if __name__ == '__main__':
-    # goldFile = 'decompounding/lqrz_compounds.test' # has to start with 2 lines of header
+    goldFile = 'decompounding/test_set_len4.txt' # has to start with 2 lines of header #TODO:hardcoded
     # # # resultsFiles = glob.glob('/home/lquiroz/jobs/decompound/100_046/output*/results.txt')
     # resultsFiles = glob.glob('output*/results.txt')
     # resultsFolder = 'decompounding' # without last /
 
     if len(sys.argv) == 3:
         goldFile = sys.argv[1]
-        resultsFolder = sys.argv[2]
+        resultFile = sys.argv[2]
     elif len(sys.argv) > 1:
         logger.error('Bad params.')
         exit()
 
-    resultsFiles = glob.glob(resultsFolder+'/output*/results.txt')
+    # resultsFiles = glob.glob(resultsFolder+'/output*/results.txt')
+    resultsFiles = list(resultFile)
 
     logger.debug('Nr of result files: '+str(len(resultsFiles)))
 
@@ -42,8 +43,6 @@ if __name__ == '__main__':
 
     fgold = codecs.open(goldFile, 'r', encoding='utf-8')
 
-#    fout = codecs.open('outFile','w',encoding='utf-8')
-
     totalResults = 0
     for resultsFile in resultsFiles:
         fresults = codecs.open(resultsFile, 'r', encoding='utf-8')
@@ -52,19 +51,7 @@ if __name__ == '__main__':
             totalResults += 1
             cleanLine = l.strip('\n').split('\t')
 
-            if cleanLine[1] == 'Noinputrep':
-                # We didnt find a representation for the compound
-                resultsCompounds[cleanLine[0]] = ''
-                noInputRepresentation += 1
-                noSplitsAtAll += 1
-                continue
-            elif cleanLine[1] == 'Notailrep':
-                # We didnt find a representation for the substring
-                resultsCompounds[cleanLine[0]] = ''
-                noTailRepresentation += 1
-                noSplitsAtAll +=1
-                continue
-            elif cleanLine[0] == cleanLine[1] and cleanLine[2] == '':
+            if cleanLine[0].strip() == cleanLine[1].strip() and cleanLine[2].strip() == '':
                 # We found possible splits, but they didnt pass rank and similarity thresholds
                 resultsCompounds[cleanLine[0]] = ''
                 discardedSplits += 1
@@ -99,12 +86,8 @@ if __name__ == '__main__':
 
         if resultsCompounds[compound] in goldSplit:
             accuracy += 1
-#            fout.write(resultsCompounds[compound]+' ')
-#            for e in goldSplit:
-#                fout.write(e+' ')
-#            fout.write('\n')
 
-#    fout.close()
+
     assert lineNr-2 == totalResults, 'Total nr of lines in gold file does not match total nr lines in results file '+\
         str(lineNr-2)+' '+str(totalResults)
 

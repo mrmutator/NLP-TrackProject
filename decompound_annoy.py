@@ -11,14 +11,6 @@ import codecs
 from annoy import AnnoyIndex
 from sklearn.metrics.pairwise import cosine_similarity
 
-# logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger('')
-hdlr = logging.FileHandler('decompound2.log')
-formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-hdlr.setFormatter(formatter)
-logger.addHandler(hdlr)
-logger.setLevel(logging.DEBUG)
-
 
 def decompound((inputCompound, nAccuracy, bestSimilarity)):
 
@@ -38,7 +30,8 @@ def decompound((inputCompound, nAccuracy, bestSimilarity)):
         logger.debug('Found key in index dict for word '+inputCompound)
     except KeyError:
         logger.debug('ERROR COULDNT FIND KEY '+inputCompound+' IN INDEX VECTOR')
-        return [(inputCompound, 'Noinputrep', '')]
+        # return [(inputCompound, 'Noinputrep', '')]
+        return [inputCompound]
 
     try:
         logger.debug('Looking up index '+str(inputCompoundIndex))
@@ -46,7 +39,8 @@ def decompound((inputCompound, nAccuracy, bestSimilarity)):
         logger.debug('Found key in vector dict for index '+str(inputCompoundIndex))
     except KeyError:
         logger.debug('ERROR COULDNT FIND KEY '+str(inputCompoundIndex)+' IN VECTOR DICT')
-        return [(inputCompound, 'Noinputrep', '')]
+        # return [(inputCompound, 'Noinputrep', '')]
+        return [inputCompound]
 
     # get all matching prefixes
     logger.info('Getting all matching prefixes')
@@ -103,7 +97,8 @@ def decompound((inputCompound, nAccuracy, bestSimilarity)):
     if len(splits) == 0:
         logger.error('Cannot decompound '+inputCompound)
         # exit()
-        return [(inputCompound, 'Notailrep', '')]
+        # return [(inputCompound, 'Notailrep', '')]
+        return [inputCompound]
 
     # apply direction vectors to splits
     logger.info('Applying direction vectors to possible splits')
@@ -148,7 +143,7 @@ def decompound((inputCompound, nAccuracy, bestSimilarity)):
             logger.debug('Getting Annoy KNN')
             try:
                 # neighbours = annoy_tree.get_nns_by_vector(list(predictionRepresentation), nAccuracy)
-                neighbours = annoy_tree.get_nns_by_vector(list(predictionRepresentation), globalNN)[:100]
+                neighbours = annoy_tree.get_nns_by_vector(list(predictionRepresentation), globalNN)[:nAccuracy]
                 logger.debug(neighbours)
             except:
                 logger.error('Problem found when retrieving KNN for prediction representation')
@@ -190,6 +185,7 @@ def decompound((inputCompound, nAccuracy, bestSimilarity)):
     else:
         # nobody got the original representation within the KNN
         # chosenSplit = bestEvidence
+        # chosenSplit = (inputCompound, '') # not split at all
         chosenSplit = (inputCompound, '') # not split at all
         logger.debug('Not splitting compound '+inputCompound)
 
@@ -197,11 +193,20 @@ def decompound((inputCompound, nAccuracy, bestSimilarity)):
     # logging.debug('Found prefix '+chosenSplit[0])
     # logging.debug('Decompounding '+chosenSplit[1])
 
-    # return [(inputCompound, chosenSplit[0], chosenSplit[1])] + decompound((chosenSplit[1], nAccuracy))
-    return [(inputCompound, chosenSplit[0], chosenSplit[1])] # do not apply recursion
+    return [chosenSplit[0]] + decompound((chosenSplit[1], nAccuracy, bestSimilarity))
+    # return [(inputCompound, chosenSplit[0], chosenSplit[1])] # do not apply recursion
 
 
 if __name__ == '__main__':
+
+    # logging.basicConfig(level=logging.DEBUG)
+    logger = logging.getLogger('')
+    hdlr = logging.FileHandler('decompound_annoy.log')
+    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+    hdlr.setFormatter(formatter)
+    logger.addHandler(hdlr)
+    logger.setLevel(logging.DEBUG)
+
     # resultsPath = 'results/dir_vecs_4_100.p'
     # annoyTreeFile = 'tree.ann'
     # pickledIndexes = pickle.load(open('decompoundIndexes.p','rb'))
@@ -285,8 +290,9 @@ if __name__ == '__main__':
     fout = codecs.open(outPath, 'w', encoding='utf-8')
 
     for i, split in enumerate(results):
-        for comp, decomp1, decomp2 in split:
-            fout.write(comp + '\t' + decomp1 + '\t' + decomp2 + '\n')
+        fout.write(inputCompounds[i] + '\t' + ' '.join(split) + '\n')
+        # for comp, decomp1, decomp2 in split:
+            # fout.write(comp + '\t' + decomp1 + '\t' + decomp2 + '\n')
 
     fout.close()
 
