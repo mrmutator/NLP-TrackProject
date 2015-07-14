@@ -148,7 +148,7 @@ def decompound((inputCompound, nAccuracy, bestSimilarity)):
             logger.debug('Getting Annoy KNN')
             try:
                 # neighbours = annoy_tree.get_nns_by_vector(list(predictionRepresentation), nAccuracy)
-                neighbours = annoy_tree.get_nns_by_vector(list(predictionRepresentation), globalNN)[:100]
+                neighbours = annoy_tree.get_nns_by_vector(list(predictionRepresentation), globalNN)[:nAccuracy]
                 logger.debug(neighbours)
             except:
                 logger.error('Problem found when retrieving KNN for prediction representation')
