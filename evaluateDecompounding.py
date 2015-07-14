@@ -12,14 +12,21 @@ logger.addHandler(hdlr)
 logger.setLevel(logging.DEBUG)
 
 if __name__ == '__main__':
-    # goldFile = 'decompounding/lqrz_compounds.test' # has to start with 2 lines of header
+    goldFile = 'data/prueba_gold.txt' # has to start with 2 lines of header
     # # # resultsFiles = glob.glob('/home/lquiroz/jobs/decompound/100_046/output*/results.txt')
     # resultsFiles = glob.glob('output*/results.txt')
-    # resultsFolder = 'decompounding' # without last /
+    resultsFolder = 'data' # without last /
+    backoffFile = 'data/len4.moses_full.results'
 
     if len(sys.argv) == 3:
         goldFile = sys.argv[1]
         resultsFolder = sys.argv[2]
+    elif len(sys.argv) == 4:
+        goldFile = sys.argv[1]
+        resultsFolder = sys.argv[2]
+        backoffFile = sys.argv[3]
+        logger.debug('Using backoff file: ' + backoffFile)
+
     elif len(sys.argv) > 1:
         logger.error('Bad params.')
         exit()
@@ -30,6 +37,7 @@ if __name__ == '__main__':
 
     goldCompounds = dict()
     resultsCompounds = dict()
+    backoffCompounds = dict()
 
     accuracy = 0
 
@@ -42,9 +50,20 @@ if __name__ == '__main__':
 
     fgold = codecs.open(goldFile, 'r', encoding='utf-8')
 
+
 #    fout = codecs.open('outFile','w',encoding='utf-8')
 
+    if backoffFile:
+
+        fback = codecs.open(backoffFile, 'r', encoding='utf-8')
+        totalBackoff = 0
+        for l in fback:
+            cleanLine = l.strip('\n').split('\t')
+            backoffCompounds[cleanLine[0]] = cleanLine[1]
+            totalBackoff += 1
+
     totalResults = 0
+    mosesCoverage = 0
     for resultsFile in resultsFiles:
         fresults = codecs.open(resultsFile, 'r', encoding='utf-8')
 
@@ -54,19 +73,31 @@ if __name__ == '__main__':
 
             if cleanLine[1] == 'Noinputrep':
                 # We didnt find a representation for the compound
-                resultsCompounds[cleanLine[0]] = ''
+                if len(backoffCompounds[cleanLine[0]].split()) > 1:
+                    resultsCompounds[cleanLine[0]] = backoffCompounds[cleanLine[0]]
+                    mosesCoverage += 1
+                else:
+                    resultsCompounds[cleanLine[0]] = ''
                 noInputRepresentation += 1
                 noSplitsAtAll += 1
                 continue
             elif cleanLine[1] == 'Notailrep':
                 # We didnt find a representation for the substring
-                resultsCompounds[cleanLine[0]] = ''
+                if len(backoffCompounds[cleanLine[0]].split()) > 1:
+                    resultsCompounds[cleanLine[0]] = backoffCompounds[cleanLine[0]]
+                    mosesCoverage +=1
+                else:
+                    resultsCompounds[cleanLine[0]] = ''
                 noTailRepresentation += 1
                 noSplitsAtAll +=1
                 continue
             elif cleanLine[0] == cleanLine[1] and cleanLine[2] == '':
                 # We found possible splits, but they didnt pass rank and similarity thresholds
-                resultsCompounds[cleanLine[0]] = ''
+                if len(backoffCompounds[cleanLine[0]].split()) > 1:
+                    resultsCompounds[cleanLine[0]] = backoffCompounds[cleanLine[0]]
+                    mosesCoverage +=1
+                else:
+                    resultsCompounds[cleanLine[0]] = ''
                 discardedSplits += 1
                 continue
 
@@ -108,7 +139,14 @@ if __name__ == '__main__':
     assert lineNr-2 == totalResults, 'Total nr of lines in gold file does not match total nr lines in results file '+\
         str(lineNr-2)+' '+str(totalResults)
 
+    if backoffFile:
+        assert lineNr-2 == totalBackoff, 'Total nr of lines in gold file does not match total nr lines in backoff file '+\
+            str(lineNr-2)+' '+str(totalBackoff)
+
     assert noSplitsAtAll == (noTailRepresentation+noInputRepresentation), 'Error in nr of no splits.'
+
+    assert coverage + mosesCoverage + discardedSplits + noTailRepresentation + noInputRepresentation == lineNr-2,\
+        'Sum does not match!'
 
     # Stats
     logger.info('Total number of examples: '+str(lineNr-2))
@@ -123,7 +161,11 @@ if __name__ == '__main__':
     logger.info('Examples for which weak prefixes were found: '+str(discardedSplits)+' '+\
                 str(discardedSplits/float(lineNr-2-noSplitsAtAll)))
 
+    logger.info('Nr of splits using Moses: '+str(mosesCoverage)+str())
+
     logger.info('Nr of compounds that were split: '+str(coverage)+' '+str(coverage/float(lineNr-2))) # Measured against all word in gold file.
-    logger.info('Accuracy: '+str(accuracy)+' '+str(accuracy/float(coverage))) # Measured against split compounds.
+    logger.info('Accuracy (against coverage): '+str(accuracy)+' '+str(accuracy/float(coverage))) # Measured against split compounds.
+    logger.info('Accuracy (against total nr of compounds): '+str(accuracy)+' '+str(accuracy/float(lineNr-2))) # Measured against total compounds.
+
 
     logger.info('End')
