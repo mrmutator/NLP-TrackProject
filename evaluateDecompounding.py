@@ -12,11 +12,15 @@ logger.addHandler(hdlr)
 logger.setLevel(logging.DEBUG)
 
 if __name__ == '__main__':
-    goldFile = 'data/prueba_gold.txt' # has to start with 2 lines of header
+#    goldFile = 'data/prueba_gold.txt' # has to start with 2 lines of header
     # # # resultsFiles = glob.glob('/home/lquiroz/jobs/decompound/100_046/output*/results.txt')
     # resultsFiles = glob.glob('output*/results.txt')
-    resultsFolder = 'data' # without last /
-    backoffFile = 'data/len4.moses_full.results'
+#    resultsFolder = 'data' # without last /
+#    backoffFile = 'data/len4.moses_full.results'
+
+    goldFile = None
+    resultsFolder = None
+    backoffFile = None
 
     if len(sys.argv) == 3:
         goldFile = sys.argv[1]
@@ -95,11 +99,12 @@ if __name__ == '__main__':
                 continue
             elif cleanLine[0] == cleanLine[1] and cleanLine[2] == '':
                 # We found possible splits, but they didnt pass rank and similarity thresholds
-                if len(backoffSplit.split()) > 1:
-                    resultsCompounds[cleanLine[0]] = backoffSplit
-                    mosesCoverage +=1
-                else:
-                    resultsCompounds[cleanLine[0]] = ''
+#                if len(backoffSplit.split()) > 1:
+#                    resultsCompounds[cleanLine[0]] = backoffSplit
+#                    mosesCoverage +=1
+#                else:
+#                    resultsCompounds[cleanLine[0]] = ''
+                resultsCompounds[cleanLine[0]] = ''
                 discardedSplits += 1
                 continue
 
@@ -165,8 +170,8 @@ if __name__ == '__main__':
 
     logger.info('Nr of splits using Moses: '+str(mosesCoverage)+str())
 
-    logger.info('Nr of compounds that were split: '+str(coverage)+' '+str(coverage/float(lineNr-2))) # Measured against all word in gold file.
-    logger.info('Accuracy (against coverage): '+str(accuracy)+' '+str(accuracy/float(coverage))) # Measured against split compounds.
+    logger.info('Nr of compounds that were split: '+str(coverage+mosesCoverage)+' '+str((coverage+mosesCoverage)/float(lineNr-2))) # Measured against all word in gold file.
+    logger.info('Accuracy (against coverage): '+str(accuracy)+' '+str(accuracy/float(coverage+mosesCoverage))) # Measured against split compounds.
     logger.info('Accuracy (against total nr of compounds): '+str(accuracy)+' '+str(accuracy/float(lineNr-2))) # Measured against total compounds.
 
 
