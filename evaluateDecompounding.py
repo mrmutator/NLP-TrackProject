@@ -71,10 +71,12 @@ if __name__ == '__main__':
             totalResults += 1
             cleanLine = l.strip('\n').split('\t')
 
+            backoffSplit = backoffCompounds.get(cleanLine[0], '')
+
             if cleanLine[1] == 'Noinputrep':
                 # We didnt find a representation for the compound
-                if len(backoffCompounds[cleanLine[0]].split()) > 1:
-                    resultsCompounds[cleanLine[0]] = backoffCompounds[cleanLine[0]]
+                if len(backoffSplit.split()) > 1:
+                    resultsCompounds[cleanLine[0]] = backoffSplit
                     mosesCoverage += 1
                 else:
                     resultsCompounds[cleanLine[0]] = ''
@@ -83,8 +85,8 @@ if __name__ == '__main__':
                 continue
             elif cleanLine[1] == 'Notailrep':
                 # We didnt find a representation for the substring
-                if len(backoffCompounds[cleanLine[0]].split()) > 1:
-                    resultsCompounds[cleanLine[0]] = backoffCompounds[cleanLine[0]]
+                if len(backoffSplit.split()) > 1:
+                    resultsCompounds[cleanLine[0]] = backoffSplit
                     mosesCoverage +=1
                 else:
                     resultsCompounds[cleanLine[0]] = ''
@@ -93,8 +95,8 @@ if __name__ == '__main__':
                 continue
             elif cleanLine[0] == cleanLine[1] and cleanLine[2] == '':
                 # We found possible splits, but they didnt pass rank and similarity thresholds
-                if len(backoffCompounds[cleanLine[0]].split()) > 1:
-                    resultsCompounds[cleanLine[0]] = backoffCompounds[cleanLine[0]]
+                if len(backoffSplit.split()) > 1:
+                    resultsCompounds[cleanLine[0]] = backoffSplit
                     mosesCoverage +=1
                 else:
                     resultsCompounds[cleanLine[0]] = ''
@@ -145,7 +147,7 @@ if __name__ == '__main__':
 
     assert noSplitsAtAll == (noTailRepresentation+noInputRepresentation), 'Error in nr of no splits.'
 
-    assert coverage + mosesCoverage + discardedSplits + noTailRepresentation + noInputRepresentation == lineNr-2,\
+    assert coverage + discardedSplits + noTailRepresentation + noInputRepresentation == lineNr-2,\
         'Sum does not match!'
 
     # Stats
