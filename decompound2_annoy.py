@@ -234,6 +234,8 @@ if __name__ == '__main__':
 	alwaysSplit = False
 	if len(sys.argv) > 11:
 		alwaysSplit = sys.argv[11] == "True"
+	if alwaysSplit:
+		similarityThreshold = 0.0
 
     elif len(sys.argv)>1:
         print 'Error in params'
