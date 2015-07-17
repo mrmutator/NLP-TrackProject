@@ -156,7 +156,10 @@ def decompound((inputCompound, nAccuracy, bestSimilarity)):
                 exit()
 
             try:
-                rank = [i for i, nei in enumerate(neighbours) if nei == inputCompoundIndex][0]
+		if alwaysSplit:
+			rank = 0
+		else:
+	                rank = [i for i, nei in enumerate(neighbours) if nei == inputCompoundIndex][0]
                 logger.debug(str(inputCompoundIndex)+' found in neighbours. Rank: '+str(rank))
                 similarity = cosine_similarity(predictionRepresentation, inputCompoundRep)[0][0]
                 logger.debug('Computed cosine similarity: '+str(similarity))
@@ -216,7 +219,7 @@ if __name__ == '__main__':
 
     globalNN = 500
 
-    if len(sys.argv) == 11:
+    if len(sys.argv) >= 11:
         resultsPath = sys.argv[1]
         # w2vPath = sys.argv[2]
         annoyTreeFile = sys.argv[2]
@@ -228,6 +231,9 @@ if __name__ == '__main__':
         outPath = sys.argv[8]
         nAccuracy = int(sys.argv[9])
         similarityThreshold = float(sys.argv[10])
+	alwaysSplit = False
+	if len(sys.argv) > 11:
+		alwaysSplit = sys.argv[11] == "True"
 
     elif len(sys.argv)>1:
         print 'Error in params'
